@@ -8,123 +8,25 @@ from .texto import normalizar
 
 # Palavras comuns que nao ajudam a identificar o assunto da pergunta.
 PARADAS = {
-    "a",
-    "o",
-    "as",
-    "os",
-    "de",
-    "da",
-    "do",
-    "das",
-    "dos",
-    "e",
-    "que",
-    "em",
-    "no",
-    "na",
-    "nos",
-    "nas",
-    "um",
-    "uma",
-    "para",
-    "pra",
-    "com",
-    "por",
-    "se",
-    "me",
-    "meu",
-    "minha",
-    "tem",
-    "ter",
-    "sobre",
-    "qual",
-    "quais",
-    "quanto",
-    "como",
-    "onde",
-    "quando",
-    "voce",
-    "voces",
-    "ser",
-    "sou",
-    "esta",
-    "esse",
-    "essa",
-    "isso",
-    "aquilo",
-    "mais",
-    "muito",
-    "pode",
-    "posso",
-    "faz",
-    "fazer",
-    "gostaria",
-    "queria",
-    "quero",
+    "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "que",
+    "em", "no", "na", "nos", "nas", "um", "uma", "para", "pra", "com",
+    "por", "se", "me", "meu", "minha", "tem", "ter", "sobre", "qual",
+    "quais", "quanto", "como", "onde", "quando", "voce", "voces", "ser",
+    "sou", "esta", "esse", "essa", "isso", "aquilo", "mais", "muito",
+    "pode", "posso", "faz", "fazer", "gostaria", "queria", "quero",
 }
 
-# Assuntos aceitos na base: somente o produto vendido (internet + IPTV).
 ASSUNTOS_PRODUTO = {
-    "internet",
-    "vpn",
-    "iptv",
-    "plano",
-    "planos",
-    "chip",
-    "tim",
-    "vivo",
-    "recarga",
-    "android",
-    "iphone",
-    "ios",
-    "aplicativo",
-    "app",
-    "play",
-    "store",
-    "tv",
-    "televisao",
-    "smart",
-    "box",
-    "streamer",
-    "streamers",
-    "teste",
-    "gratis",
-    "preco",
-    "valor",
-    "mensalidade",
-    "ativar",
-    "ativacao",
-    "instalar",
-    "assinatura",
-    "basico",
-    "completo",
-    "cartao",
-    "boleto",
-    "pix",
-    "pagamento",
-    "garantia",
-    "cancelar",
-    "cancelamento",
-    "renovar",
-    "renovacao",
-    "vencimento",
-    "suporte",
-    # Confianca e seguranca (perguntas comuns antes de contratar)
-    "seguro",
-    "segura",
-    "seguranca",
-    "confiavel",
-    "confianca",
-    "confiar",
-    "golpe",
-    "fraude",
-    "virus",
-    "hacker",
-    "privacidade",
-    "criptografia",
-    "criptografado",
-    "protegido",
-    "protege",
+    "internet", "vpn", "iptv", "plano", "planos", "chip", "tim", "vivo",
+    "recarga", "android", "iphone", "ios", "aplicativo", "app", "play",
+    "store", "tv", "televisao", "smart", "box", "streamer", "streamers",
+    "teste", "gratis", "preco", "valor", "mensalidade", "ativar",
+    "ativacao", "instalar", "assinatura", "basico", "completo", "cartao",
+    "boleto", "pix", "pagamento", "garantia", "cancelar", "cancelamento",
+    "renovar", "renovacao", "vencimento", "suporte", "seguro", "segura",
+    "seguranca", "confiavel", "confianca", "confiar", "golpe", "fraude",
+    "virus", "hacker", "privacidade", "criptografia", "criptografado",
+    "protegido", "protege", "net", "dados", "ilimitada", "ilimitado",
 }
 
 
@@ -138,7 +40,6 @@ def _palavras(texto: str) -> list[str]:
 
 
 def parece_produto(texto: str) -> bool:
-    """Heuristica: a pergunta fala de internet, IPTV ou dos aplicativos."""
     return bool(set(_palavras(texto)) & ASSUNTOS_PRODUTO)
 
 
@@ -217,7 +118,6 @@ def _pontuar(texto_normalizado: str, entrada: dict) -> float:
 
 
 def buscar(texto: str) -> dict | None:
-    """Procura a entrada mais parecida. Retorna None se nao houver confianca."""
     alvo = normalizar(texto)
     if len(alvo) < 3:
         return None
@@ -273,13 +173,8 @@ def total() -> int:
     return len(carregar())
 
 
-def para_prompt(texto: str = "", limite: int = 6, maximo: int = 2600) -> str:
-    """Monta um resumo da base para o prompt da IA.
-
-    Prioriza as entradas que combinam com a mensagem atual do cliente e inclui
-    as primeiras entradas como referencia. O texto e limitado para nao estourar
-    o contexto do modelo.
-    """
+def para_prompt(texto: str = "", limite: int = 20, maximo: int = 8000) -> str:
+    """Envia mais contexto da base para o Gemini interpretar perguntas variadas."""
     entradas = carregar()
     if not entradas:
         return ""
@@ -294,8 +189,8 @@ def para_prompt(texto: str = "", limite: int = 6, maximo: int = 2600) -> str:
     tamanho = 0
     for _, entrada in ordenadas[:limite]:
         resposta = " ".join(entrada["resposta"].split())
-        if len(resposta) > 500:
-            resposta = resposta[:497].rstrip() + "..."
+        if len(resposta) > 700:
+            resposta = resposta[:697].rstrip() + "..."
         linha = f"- P: {entrada['pergunta']}\n  R: {resposta}"
         if tamanho + len(linha) > maximo:
             break
