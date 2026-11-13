@@ -20,29 +20,13 @@ async def lifespan(_app: FastAPI):
     if API_KEY == "dev-local-troque-esta-chave":
         logger.warning("API_KEY padrao em uso. Defina a variavel de ambiente API_KEY.")
     if not atendimento_config.LINK_APP_ANDROID:
-        logger.warning(
-            "LINK_APP_ANDROID nao configurado: o agente pedira que o atendente "
-            "envie o link da Play Store."
-        )
+        logger.warning("LINK_APP_ANDROID nao configurado: o agente pedira que o atendente envie o link da Play Store.")
     if not atendimento_config.ia_ativa():
-        logger.info(
-            "IA externa desativada. O atendimento funcionara no modo roteirizado."
-        )
+        logger.info("IA externa desativada. O atendimento funcionara no modo roteirizado.")
     yield
 
 
-app = FastAPI(
-    title=APP_NAME,
-    version=APP_VERSION,
-    lifespan=lifespan,
-    description=(
-        "Atendimento automatico da ConnectTV: responde duvidas, qualifica "
-        "internet e IPTV, transfere para um humano e aprende com a base de "
-        "conhecimento.\n\n"
-        "Autentique com o header **X-API-Key**."
-    ),
-)
-
+app = FastAPI(title=APP_NAME, version=APP_VERSION, lifespan=lifespan, description="Atendimento automatico da ConnectTV. Autentique com o header X-API-Key.")
 app.include_router(atendimento.router)
 
 
@@ -61,7 +45,11 @@ def atendimento_visual():
     return FileResponse(BASE_DIR / "web" / "atendimento.html")
 
 
+@app.get("/treinamento", include_in_schema=False)
+def treinamento_visual():
+    return FileResponse(BASE_DIR / "web" / "treinamento.html")
+
+
 @app.get("/painel", include_in_schema=False)
 def painel_antigo():
-    # Compatibilidade com links antigos do projeto de assinaturas.
     return RedirectResponse("/atendimento")
