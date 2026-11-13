@@ -1,0 +1,67 @@
+from __future__ import annotations
+
+import logging
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.responses import FileResponse, RedirectResponse
+
+from .atendimento import config as atendimento_config
+from .atendimento import router as atendimento
+from .config import API_KEY, APP_NAME, APP_VERSION, BASE_DIR
+from .database import Base, engine
+
+logger = logging.getLogger("api")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    if API_KEY == "dev-local-troque-esta-chave":
+        logger.warning("API_KEY padrao em uso. Defina a variavel de ambiente API_KEY.")
+    if not atendimento_config.LINK_APP_ANDROID:
+        logger.warning(
+            "LINK_APP_ANDROID nao configurado: o agente pedira que o atendente "
+            "envie o link da Play Store."
+        )
+    if not atendimento_config.ia_ativa():
+        logger.info(
+            "IA externa desativada. O atendimento funcionara no modo roteirizado."
+        )
+    yield
+
+
+app = FastAPI(
+    title=APP_NAME,
+    version=APP_VERSION,
+    lifespan=lifespan,
+    description=(
+        "Atendimento automatico da ConnectTV: responde duvidas, qualifica "
+        "internet e IPTV, transfere para um humano e aprende com a base de "
+        "conhecimento.\n\n"
+        "Autentique com o header **X-API-Key**."
+    ),
+)
+
+app.include_router(atendimento.router)
+
+
+@app.get("/health", tags=["sistema"], summary="Verificacao de saude")
+def health():
+    return {"status": "ok", "nome": APP_NAME, "versao": APP_VERSION}
+
+
+@app.get("/", include_in_schema=False)
+def raiz():
+    return RedirectResponse("/atendimento")
+
+
+@app.get("/atendimento", include_in_schema=False)
+def atendimento_visual():
+    return FileResponse(BASE_DIR / "web" / "atendimento.html")
+
+
+@app.get("/painel", include_in_schema=False)
+def painel_antigo():
+    # Compatibilidade com links antigos do projeto de assinaturas.
+    return RedirectResponse("/atendimento")

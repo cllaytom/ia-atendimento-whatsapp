@@ -1,0 +1,128 @@
+{
+  "_instrucoes": "Base de conhecimento do atendimento. Somente assuntos do produto vendido (internet ilimitada + VPN e IPTV). Cada item tem pergunta, resposta e, opcionalmente, termos que devem aparecer na mensagem do cliente.",
+  "entradas": [
+    {
+      "pergunta": "Quais sao os planos e os precos?",
+      "resposta": "Temos estas opcoes:\n\n1️⃣ *Internet ilimitada + VPN* — R$ 15 no 1º mês (depois R$ 20), com teste grátis de 4h. Somente Android.\n2️⃣ *IPTV Completo* — R$ 30 no 1º mês (depois R$ 35), com todos os streamers.\n3️⃣ *IPTV Básico* — R$ 20 no 1º mês (depois R$ 30).\n\nQual você quer saber mais?",
+      "termos": [
+        "planos",
+        "precos"
+      ]
+    },
+    {
+      "pergunta": "Como funciona o teste gratis?",
+      "resposta": "O teste grátis é de *4 horas* e vale para a *internet ilimitada + VPN*.\n\nPara liberar, preciso confirmar se seu chip é *TIM* ou *Vivo* e se você fez *recarga nos últimos 3 meses*. O serviço é somente para celular *Android*.",
+      "termos": [
+        "teste",
+        "gratis"
+      ]
+    },
+    {
+      "pergunta": "O aplicativo funciona no iPhone?",
+      "resposta": "Infelizmente não. O serviço é somente para *Android* — não temos opção para iPhone. Se você tiver um celular Android, posso continuar o atendimento.",
+      "termos": [
+        "iphone",
+        "ios"
+      ]
+    },
+    {
+      "pergunta": "Quais operadoras sao aceitas?",
+      "resposta": "Trabalhamos com chips *TIM* e *Vivo*. O chip precisa ter recebido uma recarga nos últimos 3 meses para estar ativo.",
+      "termos": [
+        "operadora",
+        "aceita"
+      ]
+    },
+    {
+      "pergunta": "Precisa de recarga no chip?",
+      "resposta": "Sim. A recarga nos últimos 3 meses é necessária para manter o chip ativo. Sem ela, o chip pode estar inativo e a ativação não funciona.",
+      "termos": [
+        "recarga",
+        "chip"
+      ]
+    },
+    {
+      "pergunta": "Qual a diferenca entre IPTV Completo e Basico?",
+      "resposta": "O *IPTV Completo* inclui todos os streamers e custa R$ 30 no 1º mês (depois R$ 35).\nO *IPTV Básico* é o plano de entrada e custa R$ 20 no 1º mês (depois R$ 30).",
+      "termos": [
+        "diferenca",
+        "completo",
+        "basico"
+      ]
+    },
+    {
+      "pergunta": "O IPTV funciona em TV Box?",
+      "resposta": "Sim! O IPTV funciona em *Smart TV* ou em *TV Box* compatível. Me informe o *modelo do seu TV Box* que eu indico o aplicativo correto para instalar.",
+      "termos": [
+        "tv box"
+      ]
+    },
+    {
+      "pergunta": "Como funciona o IPTV?",
+      "resposta": "O IPTV funciona em *Smart TV* ou *TV Box*. Eu pergunto a marca da TV, se ela é Smart, e peço uma foto da loja de aplicativos para indicar o app certo.\n\nTemos o *Completo* (todos os streamers) por R$ 30 no 1º mês e o *Básico* por R$ 20 no 1º mês.",
+      "termos": [
+        "iptv",
+        "funciona"
+      ]
+    },
+    {
+      "pergunta": "A VPN e segura?",
+      "resposta": "Sim! 😊 A conexão usa tecnologia *VPN* com um túnel criptografado entre o seu celular e nossos servidores. Isso ajuda a proteger a transmissão dos seus dados enquanto você navega.\n\nO aplicativo é baixado pela *Play Store*, somente em *Android*. E você pode testar *4 horas grátis* antes de contratar.",
+      "termos": [
+        "vpn",
+        "segura"
+      ]
+    },
+    {
+      "pergunta": "E seguro contratar?",
+      "resposta": "Pode ficar tranquilo 😊 O serviço usa *VPN com conexão criptografada*, o que ajuda a proteger os seus dados. O aplicativo é disponibilizado pela *Play Store* (somente Android).\n\nSe quiser, comece pelo *teste grátis de 4h* para conhecer antes de pagar qualquer coisa.",
+      "termos": [
+        "seguro"
+      ]
+    },
+    {
+      "pergunta": "O servico e confiavel?",
+      "resposta": "Sim! Trabalhamos com atendimento pelo WhatsApp, aplicativo na *Play Store* e *teste grátis de 4h* para você conhecer antes de contratar. A conexão usa VPN criptografada para proteger seus dados. 😊",
+      "termos": [
+        "confiavel"
+      ]
+    },
+    {
+      "pergunta": "Posso confiar na ConnectTV?",
+      "resposta": "Pode confiar 😊 A ConnectTV trabalha com aplicativo na *Play Store*, atendimento pelo WhatsApp e *teste grátis de 4h* para você experimentar antes de contratar. A conexão é feita por VPN criptografada.",
+      "termos": [
+        "confiar"
+      ]
+    },
+    {
+      "pergunta": "E golpe?",
+      "resposta": "Não é golpe, não 😊 Nosso aplicativo fica disponível na *Play Store* e você pode fazer o *teste grátis de 4h* antes de pagar. Se ficar com dúvida, posso te explicar cada etapa antes de você decidir.",
+      "termos": [
+        "golpe"
+      ]
+    },
+    {
+      "pergunta": "O aplicativo pega virus?",
+      "resposta": "Não. O aplicativo é baixado direto da *Play Store*, que verifica os apps antes de publicar. Ele é usado para conectar a VPN do serviço, com a conexão criptografada. E você pode testar *4h grátis* antes de contratar.",
+      "termos": [
+        "virus"
+      ]
+    },
+    {
+      "pergunta": "O que e a VPN?",
+      "resposta": "A VPN protege sua conexão e ajuda a manter sua privacidade enquanto você usa a internet. Ela já está incluída no plano de internet ilimitada + VPN.",
+      "termos": [
+        "vpn"
+      ]
+    },
+    {
+      "pergunta": "como funciona",
+      "resposta": "INTERNET VIA VPN – CONNECTTV\n\nTenha acesso à nossa internet pelo seu celular Android, utilizando chip TIM ou Vivo compatível!\n\n📱 OFERTA ESPECIAL\n\n🔥 1º mês: R$ 15,00\n✅ A partir do 2º mês: R$ 20,00/mês\n\n🎁 EXPERIMENTE GRÁTIS!\nVocê tem direito a 4 HORAS DE TESTE GRÁTIS para conhecer nosso serviço antes de contratar.\n\nComo começar?\n1️⃣ Instale nosso aplicativo.\n2️⃣ Configure sua conexão.\n3️⃣ Aproveite!\n\n📌 Disponível somente para Android. Não funciona em iPhone.\n\n💬 Quer experimentar gratuitamente? É só me avisar que vou te ajudar! 😊",
+      "termos": null
+    },
+    {
+      "pergunta": "oque e ?",
+      "resposta": "VPN Privada Internet Ilimitada: Navegue com total segurança e privacidade. Proteja seus dados em redes Wi-Fi públicas e mantenha sua conexão estável e livre de bloqueios.\n\nIPTV Licenciado: Acesse seus canais ao vivo, filmes e séries favoritos diretamente pela internet, com alta definição, estabilidade de sinal e compatibilidade com Smart TVs, celulares e computadores."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "_instrucoes": "Copie este arquivo para dados/aplicativos.json e ajuste os valores. A chave pode ser a marca da TV (samsung, lg) ou o modelo do TV Box (fire tv, mxq). O agente procura o texto da chave dentro da marca/modelo informada pelo cliente.",
+  "_alternativas": "Apps usados: SmartOne, IBO Player, XCIPTV e DreamTV.",
+  "samsung": "SmartOne",
+  "lg": "SmartOne",
+  "tcl": "SmartOne",
+  "philco": "SmartOne",
+  "sony": "SmartOne",
+  "hisense": "SmartOne",
+  "fire tv": "IBO Player",
+  "mxq": "XCIPTV",
+  "tx3 mini": "XCIPTV"
+}

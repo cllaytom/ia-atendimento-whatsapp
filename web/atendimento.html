@@ -1,0 +1,1442 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atendimento IA</title>
+<!--
+  ============================================================================
+  PAINEL DE ATENDIMENTO - arquivo unico, sem dependencias externas.
+  Simula o WhatsApp: mensagens do cliente acionam a IA; quando a conversa e
+  transferida, o atendente assume e responde por aqui.
+  ============================================================================
+-->
+<style>
+  :root {
+    --bg-1: #0d0b21;
+    --bg-2: #171240;
+    --card: #1b1740;
+    --card-alto: #221d52;
+    --borda: rgba(255, 255, 255, .09);
+    --texto: #eef0ff;
+    --texto-fraco: #9aa0c7;
+    --azul: #4f7cff;
+    --ciano: #2ad4e8;
+    --roxo: #8b5cf6;
+    --verde: #2fcf8f;
+    --amarelo: #f5b83d;
+    --vermelho: #ff5c7a;
+    --raio: 16px;
+    --sombra: 0 18px 40px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: var(--texto);
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(79, 124, 255, .22), transparent 60%),
+      radial-gradient(800px 500px at 90% 0%, rgba(139, 92, 246, .20), transparent 55%),
+      linear-gradient(160deg, var(--bg-1), var(--bg-2) 60%, #0f0c29);
+    background-attachment: fixed;
+    overflow: hidden;
+  }
+
+  button, .botao {
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 10px;
+    border: 1px solid var(--borda);
+    background: rgba(255, 255, 255, .05);
+    color: var(--texto);
+    padding: 9px 14px;
+    transition: .18s ease;
+  }
+  button:hover, .botao:hover { background: rgba(255, 255, 255, .12); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .botao.primario, button.primario {
+    background: linear-gradient(135deg, var(--azul), var(--roxo));
+    border: 0;
+  }
+  .botao.primario:hover, button.primario:hover { filter: brightness(1.12); }
+  .perigo { color: var(--vermelho); }
+
+  .app { height: 100vh; display: flex; flex-direction: column; }
+
+  /* ------------------------------ topo ---------------------------------- */
+  .topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 26px 10px;
+    flex-wrap: wrap;
+  }
+  .topo h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: .3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topo h1 .ponto {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--verde);
+    box-shadow: 0 0 14px var(--verde);
+  }
+  .topo .sub { margin: 5px 0 0 20px; color: var(--texto-fraco); font-size: 12px; }
+  .acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .pilula {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; padding: 6px 10px; border-radius: 99px;
+    border: 1px solid var(--borda); color: var(--texto-fraco);
+    background: rgba(255, 255, 255, .04);
+  }
+  .pilula .bolinha { width: 7px; height: 7px; border-radius: 50%; background: var(--texto-fraco); }
+  .pilula.ok { color: #9df1cb; border-color: rgba(47, 207, 143, .4); }
+  .pilula.ok .bolinha { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+  .pilula.alerta { color: #ffd98e; border-color: rgba(245, 184, 61, .45); }
+  .pilula.alerta .bolinha { background: var(--amarelo); box-shadow: 0 0 8px var(--amarelo); }
+
+  /* ---------------------------- alerta ---------------------------------- */
+  .barra-alerta {
+    margin: 0 26px 12px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(245, 184, 61, .45);
+    background: linear-gradient(135deg, rgba(245, 184, 61, .16), rgba(255, 92, 122, .10));
+    color: #ffe6b0;
+    font-size: 13px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .barra-alerta.visivel { display: flex; animation: pulso 1.8s ease-in-out infinite; }
+  @keyframes pulso {
+    0%, 100% { box-shadow: 0 0 0 rgba(245, 184, 61, .0); }
+    50% { box-shadow: 0 0 24px rgba(245, 184, 61, .16); }
+  }
+
+  /* ---------------------------- console --------------------------------- */
+  .console {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 16px;
+    padding: 0 26px 22px;
+  }
+
+  .lista, .chat {
+    background: linear-gradient(160deg, var(--card), var(--card-alto));
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lista-topo { padding: 14px; border-bottom: 1px solid var(--borda); }
+  .busca {
+    width: 100%;
+    background: rgba(0, 0, 0, .22);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    color: var(--texto);
+    padding: 9px 12px;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+  }
+  .busca:focus { border-color: rgba(79, 124, 255, .6); }
+  .filtros { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .filtros button {
+    font-size: 11px; padding: 5px 9px; border-radius: 99px; color: var(--texto-fraco);
+  }
+  .filtros button.ativo { color: #fff; background: rgba(79, 124, 255, .28); border-color: rgba(79, 124, 255, .55); }
+
+  .conversas { flex: 1; overflow-y: auto; padding: 6px; }
+  .conversa {
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    padding: 10px 10px 10px 12px;
+    margin-bottom: 2px;
+  }
+  .conversa:hover { background: rgba(255, 255, 255, .05); }
+  .conversa.ativa { background: rgba(79, 124, 255, .13); border-left-color: var(--azul); }
+  .conversa.aguardando_humano { border-left-color: var(--amarelo); }
+  .conversa .linha1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .conversa .linha1 strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .conversa .hora { font-size: 10px; color: var(--texto-fraco); white-space: nowrap; }
+  .conversa .linha2 { display: flex; gap: 7px; align-items: center; margin-top: 5px; min-width: 0; }
+  .conversa .previa {
+    font-size: 11px; color: var(--texto-fraco);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 3px 7px;
+    border-radius: 99px;
+    border: 1px solid var(--borda);
+    white-space: nowrap;
+  }
+  .badge.ia { color: #a9b9ff; border-color: rgba(79, 124, 255, .45); background: rgba(79, 124, 255, .12); }
+  .badge.aguardando_humano { color: #ffd98e; border-color: rgba(245, 184, 61, .5); background: rgba(245, 184, 61, .14); }
+  .badge.humano { color: #9df1cb; border-color: rgba(47, 207, 143, .45); background: rgba(47, 207, 143, .12); }
+  .badge.encerrada { color: var(--texto-fraco); }
+
+  /* ------------------------------ chat ---------------------------------- */
+  .chat-topo {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--borda);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .cliente-info { display: flex; align-items: center; gap: 11px; min-width: 0; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 15px; color: #fff;
+    background: linear-gradient(135deg, var(--azul), var(--roxo));
+    flex: 0 0 auto;
+  }
+  .cliente-info .nome { font-size: 14px; font-weight: 600; }
+  .cliente-info .detalhe { font-size: 11px; color: var(--texto-fraco); margin-top: 2px; }
+  .chat-acoes { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chat-acoes button { font-size: 11px; padding: 7px 10px; }
+
+  .chat-corpo { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+  .mensagens {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    background:
+      radial-gradient(500px 200px at 100% 0%, rgba(79, 124, 255, .07), transparent 60%),
+      rgba(0, 0, 0, .10);
+  }
+  .msg {
+    max-width: 76%;
+    padding: 10px 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+  .msg .meta { font-size: 9px; opacity: .62; margin-top: 5px; text-align: right; }
+  .msg.cliente {
+    align-self: flex-start;
+    background: #2a2755;
+    border: 1px solid rgba(255, 255, 255, .07);
+    border-top-left-radius: 4px;
+  }
+  .msg.ia, .msg.humano {
+    align-self: flex-end;
+    background: linear-gradient(135deg, rgba(79, 124, 255, .92), rgba(139, 92, 246, .92));
+    border-top-right-radius: 4px;
+  }
+  .msg.humano { background: linear-gradient(135deg, rgba(24, 156, 112, .92), rgba(42, 212, 232, .72)); }
+  .msg.sistema {
+    align-self: center;
+    max-width: 88%;
+    background: rgba(245, 184, 61, .09);
+    border: 1px dashed rgba(245, 184, 61, .35);
+    color: #ffdf9f;
+    font-size: 11px;
+    text-align: center;
+    white-space: pre-wrap;
+    padding: 9px 12px;
+  }
+  .msg img { display: block; max-width: 100%; max-height: 280px; border-radius: 10px; }
+  .msg .legenda { margin-top: 7px; }
+
+  .resumo {
+    margin: 0 18px 10px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(245, 184, 61, .35);
+    background: rgba(245, 184, 61, .08);
+    color: #ffe8b8;
+    font-size: 11px;
+    max-height: 170px;
+    overflow-y: auto;
+  }
+  .resumo strong { display: block; margin-bottom: 6px; font-size: 11px; letter-spacing: .4px; }
+  .resumo pre { margin: 0; font: inherit; white-space: pre-wrap; }
+
+  .area-composer { border-top: 1px solid var(--borda); }
+  .faixa-humano {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 16px;
+    font-size: 12px;
+    background: rgba(245, 184, 61, .12);
+    border-bottom: 1px solid rgba(245, 184, 61, .25);
+    color: #ffe1a3;
+  }
+  .faixa-humano.visivel { display: flex; }
+  .faixa-humano button { font-size: 11px; padding: 5px 9px; }
+
+  .composer { display: flex; gap: 8px; padding: 12px 14px 6px; align-items: flex-end; }
+  .composer textarea {
+    flex: 1;
+    min-height: 44px;
+    max-height: 130px;
+    resize: none;
+    background: rgba(0, 0, 0, .24);
+    color: var(--texto);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+    outline: none;
+  }
+  .composer textarea:focus { border-color: rgba(79, 124, 255, .6); }
+  .composer .icone {
+    width: 44px; height: 44px; padding: 0;
+    display: grid; place-items: center; font-size: 18px;
+    border-radius: 12px; flex: 0 0 auto;
+  }
+  .composer .enviar { height: 44px; border-radius: 12px; padding: 0 18px; flex: 0 0 auto; }
+  .dica-modo {
+    padding: 2px 18px 10px;
+    font-size: 10px;
+    color: var(--texto-fraco);
+  }
+
+  .vazio {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--texto-fraco);
+    text-align: center;
+    padding: 30px;
+  }
+  .vazio .grande { font-size: 46px; opacity: .8; }
+  .vazio h2 { margin: 0; font-size: 16px; color: var(--texto); }
+  .vazio p { margin: 0; font-size: 12px; max-width: 330px; }
+
+  /* ----------------------------- login ---------------------------------- */
+  .login {
+    position: fixed; inset: 0; z-index: 100;
+    display: none;
+    place-items: center;
+    background: rgba(8, 6, 24, .82);
+    backdrop-filter: blur(8px);
+    padding: 20px;
+  }
+  .login.visivel { display: grid; }
+  .login .caixa {
+    width: min(390px, 100%);
+    background: linear-gradient(160deg, var(--card), var(--card-alto));
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    box-shadow: var(--sombra);
+    padding: 24px;
+  }
+  .login h3 { margin: 0 0 8px; font-size: 17px; }
+  .login p { margin: 0 0 14px; color: var(--texto-fraco); font-size: 12px; line-height: 1.5; }
+  .login input {
+    width: 100%;
+    background: rgba(0, 0, 0, .25);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    color: var(--texto);
+    padding: 11px 12px;
+    font: inherit;
+    margin-bottom: 12px;
+    outline: none;
+  }
+  .login input:focus { border-color: rgba(79, 124, 255, .6); }
+  .login .dica { font-size: 10px; color: var(--texto-fraco); margin-top: 10px; text-align: center; }
+
+  /* ----------------------------- dialog --------------------------------- */
+  dialog {
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    background: linear-gradient(160deg, var(--card), var(--card-alto));
+    color: var(--texto);
+    box-shadow: var(--sombra);
+    padding: 22px;
+    width: min(420px, calc(100vw - 32px));
+  }
+  dialog::backdrop { background: rgba(8, 6, 24, .7); backdrop-filter: blur(5px); }
+  dialog h3 { margin: 0 0 6px; font-size: 17px; }
+  dialog p { margin: 0 0 14px; color: var(--texto-fraco); font-size: 12px; line-height: 1.5; }
+  dialog input {
+    width: 100%;
+    background: rgba(0, 0, 0, .25);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    color: var(--texto);
+    padding: 11px 12px;
+    font: inherit;
+    margin-bottom: 14px;
+    outline: none;
+  }
+  dialog input:focus { border-color: rgba(79, 124, 255, .6); }
+  dialog .acoes-dialogo { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* -------------------------- duvidas / base ---------------------------- */
+  dialog.larga { width: min(680px, calc(100vw - 24px)); }
+  dialog textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, .25);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    color: var(--texto);
+    padding: 10px 12px;
+    font: inherit;
+    resize: vertical;
+    outline: none;
+  }
+  dialog textarea:focus { border-color: rgba(79, 124, 255, .6); }
+
+  .contador {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 99px; font-size: 10px; font-weight: 700;
+    background: var(--amarelo); color: #2a1c00;
+  }
+  .contador.zero { display: none; }
+
+  .duvidas-cabecalho { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .duvidas-cabecalho button { padding: 4px 9px; }
+  .duvidas-lista {
+    display: flex; flex-direction: column; gap: 10px;
+    max-height: 46vh; overflow-y: auto;
+    margin: 0 -4px 14px; padding: 0 4px;
+  }
+  .duvidas-vazio {
+    text-align: center; color: var(--texto-fraco);
+    font-size: 12px; padding: 18px 6px; line-height: 1.5;
+  }
+  .duvida {
+    border: 1px solid var(--borda); border-radius: 12px;
+    padding: 12px; background: rgba(0, 0, 0, .16);
+  }
+  .duvida-topo {
+    display: flex; justify-content: space-between; gap: 8px;
+    font-size: 11px; color: var(--texto-fraco);
+  }
+  .duvida-topo strong { color: var(--texto); font-size: 13px; }
+  .duvida blockquote {
+    margin: 8px 0 10px; padding-left: 10px;
+    border-left: 2px solid var(--roxo);
+    font-size: 13px; line-height: 1.45;
+  }
+  .duvida textarea { margin-bottom: 8px; }
+  .duvida-acoes {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; flex-wrap: wrap;
+  }
+  .duvida-acoes .check {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--texto-fraco); cursor: pointer;
+  }
+  .duvida-acoes .check input { width: auto; margin: 0; padding: 0; }
+  .duvida-acoes button { padding: 6px 12px; }
+
+  dialog details { border-top: 1px solid var(--borda); padding-top: 12px; margin-top: 4px; }
+  dialog summary { cursor: pointer; font-size: 12px; color: var(--texto-fraco); }
+  dialog summary:hover { color: var(--texto); }
+  .conhecimento-lista {
+    margin-top: 10px; max-height: 26vh; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .conhecimento-item {
+    display: flex; justify-content: space-between; gap: 8px;
+    align-items: flex-start; font-size: 11px;
+    border-bottom: 1px dashed var(--borda); padding-bottom: 6px;
+  }
+  .conhecimento-item span { color: var(--texto-fraco); }
+  .conhecimento-item b { color: var(--texto); font-weight: 500; }
+  .conhecimento-item button { padding: 3px 8px; font-size: 10px; }
+  .form-conhecimento { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .form-conhecimento .acoes-dialogo { justify-content: flex-start; margin-top: 2px; }
+
+  .historico-importar { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .historico-importar p { margin: 0; font-size: 11px; color: var(--texto-fraco); line-height: 1.5; }
+  .historico-importar input[type="file"] { font-size: 11px; }
+  .historico-importar textarea { margin-bottom: 0; }
+  .historico-importar .acoes-dialogo { justify-content: flex-start; }
+  .historico-resumo { font-size: 11px; color: var(--texto-fraco); margin-top: 4px; }
+  .candidato .check {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--texto-fraco); cursor: pointer;
+  }
+  .candidato .check input { width: auto; margin: 0; padding: 0; }
+
+  /* ----------------------------- toast ---------------------------------- */
+  .toast {
+    position: fixed;
+    left: 50%; bottom: 22px;
+    transform: translate(-50%, 20px);
+    background: #241f52;
+    border: 1px solid var(--borda);
+    color: var(--texto);
+    padding: 11px 18px;
+    border-radius: 12px;
+    font-size: 12px;
+    box-shadow: var(--sombra);
+    opacity: 0;
+    pointer-events: none;
+    transition: .2s ease;
+    z-index: 200;
+    max-width: calc(100vw - 40px);
+  }
+  .toast.visivel { opacity: 1; transform: translate(-50%, 0); }
+  .toast.erro { border-color: rgba(255, 92, 122, .55); color: #ffc3cf; }
+
+  .oculto { display: none !important; }
+
+  @media (max-width: 880px) {
+    body { overflow: auto; }
+    .app { height: auto; min-height: 100vh; }
+    .console { grid-template-columns: 1fr; padding: 0 12px 16px; }
+    .lista { max-height: 260px; }
+    .chat { min-height: 560px; }
+    .topo { padding: 14px 14px 8px; }
+    .barra-alerta { margin: 0 12px 10px; }
+    .msg { max-width: 88%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login" id="telaLogin">
+  <div class="caixa">
+    <h3>Acessar o atendimento</h3>
+    <p>Informe a chave da API (header <b>X-API-Key</b>). Ela fica no arquivo <code>.env</code>.</p>
+    <input id="campoChave" type="password" placeholder="X-API-Key" autocomplete="off">
+    <button class="primario" style="width:100%" id="btnEntrar">Entrar</button>
+    <div class="dica">A chave está no arquivo <code>.env</code> (variável <code>API_KEY</code>).</div>
+  </div>
+</div>
+
+<div class="app">
+  <header class="topo">
+    <div>
+      <h1><span class="ponto"></span> Atendimento IA</h1>
+      <div class="sub" id="subtitulo">Simulador de WhatsApp · carregando...</div>
+    </div>
+    <div class="acoes">
+      <span class="pilula" id="statusIA"><span class="bolinha"></span> IA</span>
+      <span class="pilula" id="statusLink"><span class="bolinha"></span> Link do app</span>
+      <button id="btnDuvidas" title="Perguntas que a IA não soube responder">Dúvidas <span class="contador zero" id="contadorDuvidas">0</span></button>
+      <a class="botao" href="/docs">API</a>
+      <button class="primario" id="btnNova">+ Nova conversa</button>
+    </div>
+  </header>
+
+  <div class="barra-alerta" id="barraAlerta">
+    <span id="textoAlerta">🔔 Conversa aguardando atendente.</span>
+    <button id="btnVerAlerta">Ver conversa</button>
+  </div>
+
+  <main class="console">
+    <aside class="lista">
+      <div class="lista-topo">
+        <input class="busca" id="busca" placeholder="Buscar por nome ou telefone...">
+        <div class="filtros" id="filtros">
+          <button data-filtro="todas" class="ativo">Todas</button>
+          <button data-filtro="aguardando_humano">Aguardando</button>
+          <button data-filtro="ia">IA</button>
+          <button data-filtro="humano">Humano</button>
+          <button data-filtro="encerrada">Encerradas</button>
+        </div>
+      </div>
+      <div class="conversas" id="conversas"></div>
+    </aside>
+
+    <section class="chat" id="chat">
+      <div class="chat-topo" id="chatTopo"></div>
+      <div class="chat-corpo" id="chatCorpo">
+        <div class="mensagens" id="mensagens"></div>
+        <div class="resumo oculto" id="resumo"></div>
+      </div>
+      <div class="area-composer" id="areaComposer">
+        <div class="faixa-humano" id="faixaHumano">
+          <span id="textoFaixa"></span>
+          <button class="primario" id="btnFaixaAssumir">Assumir agora</button>
+        </div>
+        <form class="composer" id="formEnvio">
+          <button type="button" class="icone" id="btnImagem" title="Enviar foto (cliente)">📷</button>
+          <input type="file" id="arquivo" accept="image/*" hidden>
+          <textarea id="texto" rows="1" placeholder="Digite sua mensagem..."></textarea>
+          <button type="submit" class="primario enviar" id="btnEnviar">Enviar</button>
+        </form>
+        <div class="dica-modo" id="dicaModo"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dialogDuvidas" class="larga">
+  <div class="duvidas-cabecalho">
+    <div>
+      <h3>Dúvidas para ensinar a IA</h3>
+      <p>Perguntas que a IA não soube responder. Escreva a resposta oficial, marque “Salvar na base” para ela usar nas próximas conversas e, se quiser, marque “Enviar ao cliente” para responder na hora sem tirar a conversa da IA.</p>
+    </div>
+    <button type="button" id="btnFecharDuvidas" title="Fechar">✕</button>
+  </div>
+
+  <div class="duvidas-lista" id="listaDuvidas"></div>
+
+  <details>
+    <summary>+ Adicionar pergunta e resposta manualmente</summary>
+    <form id="formConhecimento" class="form-conhecimento">
+      <input id="novaPergunta" placeholder="Pergunta do cliente (ex.: aceita boleto?)" maxlength="600" autocomplete="off">
+      <textarea id="novaResposta" rows="3" placeholder="Resposta oficial..."></textarea>
+      <div class="acoes-dialogo">
+        <button class="primario" type="submit">Salvar na base</button>
+      </div>
+    </form>
+  </details>
+
+  <details>
+    <summary id="tituloBase">Base de conhecimento</summary>
+    <div class="conhecimento-lista" id="listaConhecimento"></div>
+  </details>
+
+  <details>
+    <summary>+ Importar histórico do WhatsApp</summary>
+    <div class="historico-importar">
+      <p>Exporte uma conversa do WhatsApp como <b>.txt</b> (sem mídia) e envie aqui. A IA sugere pares de pergunta e resposta; você revisa e salva só os que estiverem certos.</p>
+      <input type="file" id="arquivoHistorico" accept=".txt,text/plain">
+      <textarea id="historicoTexto" rows="4" placeholder="Ou cole aqui o conteúdo do arquivo .txt..."></textarea>
+      <div class="acoes-dialogo">
+        <button type="button" class="primario" id="btnAnalisarHistorico">Analisar histórico</button>
+      </div>
+      <div id="historicoResultado"></div>
+    </div>
+  </details>
+
+  <div class="acoes-dialogo" style="margin-top:14px">
+    <button type="button" id="btnFecharDuvidas2">Fechar</button>
+  </div>
+</dialog>
+
+<dialog id="dialogNova">
+  <form id="formNova" method="dialog">
+    <h3>Nova conversa</h3>
+    <p>Simule um cliente entrando em contato. Use um nome ou telefone para identificar a conversa.</p>
+    <input id="campoContato" placeholder="Ex.: Maria · 11 99999-0000" maxlength="80" autocomplete="off">
+    <div class="acoes-dialogo">
+      <button type="button" id="btnCancelarNova">Cancelar</button>
+      <button type="submit" class="primario">Iniciar atendimento</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const CONFIG = {
+    apiBase: "",
+    intervalo: 3000,       // atualizacao automatica (ms)
+    limiteImagem: 2200000, // bytes do arquivo
+    chaveStorage: "assinaturas.apiKey",
+  };
+
+  const ROTULOS = {
+    ia: "IA",
+    aguardando_humano: "Aguardando",
+    humano: "Humano",
+    encerrada: "Encerrada",
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const escapar = (t) => String(t == null ? "" : t).replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+  ));
+
+  let CHAVE = localStorage.getItem(CONFIG.chaveStorage) || "";
+  const ESTADO = {
+    config: null,
+    conversas: [],
+    atual: null,
+    duvidas: [],
+    conhecimento: [],
+    historico: [],
+    ultimoCount: -1,
+    filtro: "todas",
+    busca: "",
+    carregando: false,
+    enviando: false,
+    timer: null,
+  };
+
+  function toast(texto, erro = false) {
+    const el = $("toast");
+    el.textContent = texto;
+    el.classList.toggle("erro", erro);
+    el.classList.add("visivel");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => el.classList.remove("visivel"), 3200);
+  }
+
+  async function api(caminho, opcoes = {}) {
+    const resposta = await fetch(CONFIG.apiBase + caminho, {
+      method: opcoes.metodo || "GET",
+      headers: { "X-API-Key": CHAVE, "Content-Type": "application/json" },
+      body: opcoes.corpo ? JSON.stringify(opcoes.corpo) : undefined,
+    });
+    if (resposta.status === 401) {
+      abrirLogin();
+      throw new Error("Chave inválida");
+    }
+    if (!resposta.ok) {
+      let detalhe = `HTTP ${resposta.status}`;
+      try {
+        const dados = await resposta.json();
+        detalhe = dados.detail || detalhe;
+        if (Array.isArray(detalhe)) detalhe = detalhe.map((d) => d.msg || d).join("; ");
+      } catch (_) {}
+      throw new Error(detalhe);
+    }
+    if (resposta.status === 204) return null;
+    return resposta.json().catch(() => null);
+  }
+
+  /* ------------------------------- login -------------------------------- */
+  function abrirLogin() {
+    $("telaLogin").classList.add("visivel");
+    $("campoChave").value = CHAVE;
+    setTimeout(() => $("campoChave").focus(), 60);
+  }
+
+  function fecharLogin() {
+    $("telaLogin").classList.remove("visivel");
+  }
+
+  async function entrar() {
+    const valor = $("campoChave").value.trim();
+    if (!valor) { toast("Informe a chave da API.", true); return; }
+    CHAVE = valor;
+    localStorage.setItem(CONFIG.chaveStorage, CHAVE);
+    try {
+      await iniciar();
+      fecharLogin();
+    } catch (erro) {
+      toast(erro.message, true);
+    }
+  }
+
+  /* ----------------------------- navegacao ------------------------------ */
+  function horaCurta(iso) {
+    if (!iso) return "";
+    const data = new Date(iso);
+    if (Number.isNaN(data.getTime())) return "";
+    const hoje = new Date();
+    const mesmoDia = data.toDateString() === hoje.toDateString();
+    if (mesmoDia) {
+      return data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    }
+    return data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  }
+
+  function iniciais(nome) {
+    const partes = String(nome || "?").trim().split(/\s+/).filter(Boolean);
+    if (!partes.length) return "?";
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+  }
+
+  function formatarTexto(texto) {
+    let html = escapar(texto);
+    html = html.replace(/\*([^*\n]+)\*/g, "<strong>$1</strong>");
+    html = html.replace(/_([^_\n]+)_/g, "<em>$1</em>");
+    return html;
+  }
+
+  /* ----------------------------- listagem ------------------------------- */
+  function conversasFiltradas() {
+    const termo = ESTADO.busca.trim().toLowerCase();
+    return ESTADO.conversas.filter((c) => {
+      if (ESTADO.filtro !== "todas" && c.estado !== ESTADO.filtro) return false;
+      if (!termo) return true;
+      return `${c.nome || ""} ${c.contato || ""}`.toLowerCase().includes(termo);
+    });
+  }
+
+  function renderLista() {
+    const alvo = $("conversas");
+    const itens = conversasFiltradas();
+    if (!itens.length) {
+      alvo.innerHTML = `<div class="vazio" style="min-height:180px"><div class="grande">💬</div><p>Nenhuma conversa ${ESTADO.filtro === "todas" ? "ainda" : "neste filtro"}.</p></div>`;
+      return;
+    }
+    alvo.innerHTML = itens.map((c) => {
+      const ativa = ESTADO.atual && ESTADO.atual.conversa.id === c.id ? "ativa" : "";
+      return `
+        <button class="conversa ${ativa} ${escapar(c.estado)}" data-id="${c.id}">
+          <div class="linha1">
+            <strong>${escapar(c.nome || c.contato)}</strong>
+            <span class="hora">${horaCurta(c.ultima_mensagem_em)}</span>
+          </div>
+          <div class="linha2">
+            <span class="badge ${escapar(c.estado)}">${escapar(ROTULOS[c.estado] || c.estado)}</span>
+            <span class="previa">${escapar(c.previa || c.resumo || "Sem mensagens")}</span>
+          </div>
+        </button>`;
+    }).join("");
+  }
+
+  function renderAlerta(quantidade) {
+    const barra = $("barraAlerta");
+    if (quantidade > 0) {
+      $("textoAlerta").textContent = `🔔 ${quantidade} conversa${quantidade > 1 ? "s" : ""} aguardando atendimento humano.`;
+      barra.classList.add("visivel");
+      document.title = `(${quantidade}) Atendimento IA`;
+    } else {
+      barra.classList.remove("visivel");
+      document.title = "Atendimento IA";
+    }
+  }
+
+  function renderStatus() {
+    const cfg = ESTADO.config || {};
+    const statusIA = $("statusIA");
+    if (cfg.ia_ativa) {
+      statusIA.className = "pilula ok";
+      statusIA.innerHTML = `<span class="bolinha"></span> IA ativa${cfg.modelo_ia ? " · " + escapar(cfg.modelo_ia) : ""}`;
+    } else {
+      statusIA.className = "pilula";
+      statusIA.innerHTML = `<span class="bolinha"></span> Modo roteirizado`;
+      statusIA.title = "Configure IA_API_KEY e IA_BASE_URL para respostas livres.";
+    }
+    const statusLink = $("statusLink");
+    statusLink.className = "pilula " + (cfg.link_app_configurado ? "ok" : "alerta");
+    statusLink.innerHTML = `<span class="bolinha"></span> ${cfg.link_app_configurado ? "Link do app configurado" : "Link do app pendente"}`;
+    statusLink.title = cfg.link_app_configurado
+      ? "O agente envia o link da Play Store automaticamente."
+      : "Defina LINK_APP_ANDROID no .env para o agente enviar o link.";
+    $("subtitulo").textContent = `Simulador de WhatsApp · ${cfg.nome_negocio || "Atendimento"} · modo teste`;
+  }
+
+  /* ------------------------------ chat ---------------------------------- */
+  function renderChat() {
+    const topo = $("chatTopo");
+    const mensagens = $("mensagens");
+    const resumo = $("resumo");
+    const area = $("areaComposer");
+
+    if (!ESTADO.atual) {
+      topo.innerHTML = "";
+      mensagens.innerHTML = `
+        <div class="vazio">
+          <div class="grande">🤖</div>
+          <h2>Atendimento automático</h2>
+          <p>Abra uma conversa ao lado ou crie uma nova para testar o agente como se fosse um cliente no WhatsApp.</p>
+          <button class="primario" id="btnVazioNova">+ Nova conversa</button>
+        </div>`;
+      resumo.classList.add("oculto");
+      area.classList.add("oculto");
+      const b = $("btnVazioNova");
+      if (b) b.addEventListener("click", abrirNova);
+      return;
+    }
+
+    area.classList.remove("oculto");
+    const c = ESTADO.atual.conversa;
+    const acoes = [];
+    if (c.estado === "aguardando_humano") {
+      acoes.push(`<button class="primario" data-acao="assumir">Assumir conversa</button>`);
+    }
+    if (c.estado === "humano" || c.estado === "aguardando_humano") {
+      acoes.push(`<button data-acao="devolver">Devolver à IA</button>`);
+    }
+    if (c.estado !== "encerrada") {
+      acoes.push(`<button class="perigo" data-acao="encerrar">Encerrar</button>`);
+    }
+
+    topo.innerHTML = `
+      <div class="cliente-info">
+        <div class="avatar">${escapar(iniciais(c.nome || c.contato))}</div>
+        <div>
+          <div class="nome">${escapar(c.nome || c.contato)} <span class="badge ${escapar(c.estado)}">${escapar(ROTULOS[c.estado] || c.estado)}</span></div>
+          <div class="detalhe">${escapar(c.contato)} · ${escapar(c.canal)}${c.motivo_transferencia ? " · " + escapar(c.motivo_transferencia) : ""}</div>
+        </div>
+      </div>
+      <div class="chat-acoes">${acoes.join("")}</div>`;
+
+    const pertoDoFim = mensagens.scrollHeight - mensagens.scrollTop - mensagens.clientHeight < 120;
+    mensagens.innerHTML = ESTADO.atual.mensagens.map((m) => {
+      const meta = `${m.autor === "ia" ? "IA" : m.autor === "humano" ? "Atendente" : ""}${m.autor !== "cliente" && m.autor !== "sistema" ? " · " : ""}${horaCurta(m.criada_em)}`;
+      if (m.autor === "sistema") {
+        return `<div class="msg sistema">${escapar(m.texto)}</div>`;
+      }
+      if (m.tipo === "imagem" && m.imagem) {
+        return `<div class="msg ${escapar(m.autor)}">
+          <img src="${escapar(m.imagem)}" alt="Foto enviada pelo cliente">
+          ${m.texto && m.texto !== "[foto enviada]" ? `<div class="legenda">${formatarTexto(m.texto)}</div>` : ""}
+          <div class="meta">${escapar(meta)}</div>
+        </div>`;
+      }
+      return `<div class="msg ${escapar(m.autor)}">${formatarTexto(m.texto)}<div class="meta">${escapar(meta)}</div></div>`;
+    }).join("");
+
+    if (c.resumo && (c.estado === "aguardando_humano" || c.estado === "humano")) {
+      resumo.classList.remove("oculto");
+      resumo.innerHTML = `<strong>📋 Resumo para o atendente</strong><pre>${escapar(c.resumo)}</pre>`;
+    } else {
+      resumo.classList.add("oculto");
+    }
+
+    if (pertoDoFim) mensagens.scrollTop = mensagens.scrollHeight;
+
+    const faixa = $("faixaHumano");
+    if (c.estado === "aguardando_humano") {
+      faixa.classList.add("visivel");
+      $("textoFaixa").textContent = "A IA transferiu esta conversa. Assuma para responder como atendente.";
+      $("btnFaixaAssumir").classList.remove("oculto");
+    } else if (c.estado === "humano") {
+      faixa.classList.add("visivel");
+      $("textoFaixa").textContent = "Você está no atendimento humano. A IA não responde mais nesta conversa.";
+      $("btnFaixaAssumir").classList.add("oculto");
+    } else {
+      faixa.classList.remove("visivel");
+      $("btnFaixaAssumir").classList.remove("oculto");
+    }
+
+    const encerrada = c.estado === "encerrada";
+    $("texto").disabled = encerrada;
+    $("btnEnviar").disabled = encerrada;
+    $("btnImagem").disabled = encerrada || c.estado !== "ia";
+    $("texto").placeholder = encerrada
+      ? "Conversa encerrada"
+      : c.estado === "ia"
+        ? "Simule o cliente digitando aqui..."
+        : "Responder como atendente humano...";
+    $("dicaModo").textContent = encerrada
+      ? "Conversa encerrada. Crie uma nova para continuar testando."
+      : c.estado === "ia"
+        ? "Modo simulação: você está digitando como cliente. A IA responde automaticamente."
+        : "Modo atendente: sua mensagem será registrada como resposta humana.";
+    $("btnEnviar").textContent = c.estado === "ia" ? "Enviar cliente" : "Responder";
+  }
+
+  /* ------------------------------ dados --------------------------------- */
+  async function carregarLista() {
+    const [dados, cfg] = await Promise.all([
+      api("/atendimento/conversas"),
+      api("/atendimento/config"),
+    ]);
+    ESTADO.config = cfg;
+    definirContadorDuvidas(cfg.duvidas_pendentes || 0);
+    ESTADO.conversas = dados.itens || [];
+    renderLista();
+    renderAlerta(dados.aguardando || 0);
+    return dados;
+  }
+
+  async function selecionar(id) {
+    const detalhe = await api(`/atendimento/conversas/${id}`);
+    ESTADO.atual = detalhe;
+    ESTADO.ultimoCount = detalhe.mensagens.length;
+    renderLista();
+    renderChat();
+  }
+
+  async function atualizarTudo() {
+    if (!CHAVE || ESTADO.carregando || ESTADO.enviando) return;
+    ESTADO.carregando = true;
+    try {
+      await carregarLista();
+      if (ESTADO.atual) {
+        const detalhe = await api(`/atendimento/conversas/${ESTADO.atual.conversa.id}`);
+        const mudou = detalhe.mensagens.length !== ESTADO.ultimoCount
+          || detalhe.conversa.estado !== ESTADO.atual.conversa.estado
+          || detalhe.conversa.etapa !== ESTADO.atual.conversa.etapa
+          || detalhe.conversa.resumo !== ESTADO.atual.conversa.resumo;
+        if (mudou) {
+          ESTADO.atual = detalhe;
+          ESTADO.ultimoCount = detalhe.mensagens.length;
+          renderLista();
+          renderChat();
+        }
+      } else if (ESTADO.conversas.length) {
+        await selecionar(ESTADO.conversas[0].id);
+      }
+    } catch (erro) {
+      if (erro.message !== "Chave inválida") console.warn(erro);
+    } finally {
+      ESTADO.carregando = false;
+    }
+  }
+
+  async function iniciar() {
+    ESTADO.config = await api("/atendimento/config");
+    renderStatus();
+    definirContadorDuvidas(ESTADO.config.duvidas_pendentes || 0);
+    await carregarLista();
+    if (ESTADO.conversas.length) {
+      await selecionar(ESTADO.conversas[0].id);
+    } else {
+      ESTADO.atual = null;
+      renderChat();
+    }
+    if (!ESTADO.timer) {
+      ESTADO.timer = setInterval(atualizarTudo, CONFIG.intervalo);
+    }
+  }
+
+  /* ----------------------------- acoes ---------------------------------- */
+  async function acao(id, nome) {
+    try {
+      const detalhe = await api(`/atendimento/conversas/${id}/${nome}`, { metodo: "POST" });
+      ESTADO.atual = detalhe;
+      ESTADO.ultimoCount = detalhe.mensagens.length;
+      await carregarLista();
+      renderChat();
+      toast(nome === "assumir" ? "Conversa assumida." : nome === "devolver" ? "Conversa devolvida para a IA." : "Conversa encerrada.");
+    } catch (erro) {
+      toast(erro.message, true);
+    }
+  }
+
+  async function enviarTexto() {
+    if (!ESTADO.atual || ESTADO.enviando) return;
+    const campo = $("texto");
+    const texto = campo.value.trim();
+    if (!texto) return;
+
+    const estado = ESTADO.atual.conversa.estado;
+    if (estado === "encerrada") { toast("Conversa encerrada.", true); return; }
+
+    const rota = estado === "ia" ? "mensagens" : "responder";
+    ESTADO.enviando = true;
+    $("btnEnviar").disabled = true;
+    $("btnEnviar").textContent = estado === "ia" ? "IA digitando..." : "Enviando...";
+    try {
+      const detalhe = await api(`/atendimento/conversas/${ESTADO.atual.conversa.id}/${rota}`, {
+        metodo: "POST",
+        corpo: { texto },
+      });
+      campo.value = "";
+      ESTADO.atual = detalhe;
+      ESTADO.ultimoCount = detalhe.mensagens.length;
+      await carregarLista();
+      renderChat();
+    } catch (erro) {
+      toast(erro.message, true);
+    } finally {
+      ESTADO.enviando = false;
+      $("btnEnviar").disabled = false;
+      $("btnEnviar").textContent = estado === "ia" ? "Enviar cliente" : "Responder";
+    }
+  }
+
+  function lerImagem(arquivo) {
+    return new Promise((resolve, reject) => {
+      const leitor = new FileReader();
+      leitor.onload = () => resolve(leitor.result);
+      leitor.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+      leitor.readAsDataURL(arquivo);
+    });
+  }
+
+  async function enviarImagem(arquivo) {
+    if (!ESTADO.atual) return;
+    if (ESTADO.atual.conversa.estado !== "ia") {
+      toast("A foto é uma ação do cliente. A conversa está com o atendente.", true);
+      return;
+    }
+    if (!arquivo.type.startsWith("image/")) { toast("Envie um arquivo de imagem.", true); return; }
+    if (arquivo.size > CONFIG.limiteImagem) { toast("Imagem muito grande (máx. 2 MB).", true); return; }
+    try {
+      const dataUrl = await lerImagem(arquivo);
+      ESTADO.enviando = true;
+      const detalhe = await api(`/atendimento/conversas/${ESTADO.atual.conversa.id}/mensagens`, {
+        metodo: "POST",
+        corpo: { imagem: dataUrl },
+      });
+      ESTADO.atual = detalhe;
+      ESTADO.ultimoCount = detalhe.mensagens.length;
+      await carregarLista();
+      renderChat();
+    } catch (erro) {
+      toast(erro.message, true);
+    } finally {
+      ESTADO.enviando = false;
+      $("arquivo").value = "";
+    }
+  }
+
+  /* ---------------------------- aprendizado ----------------------------- */
+  function definirContadorDuvidas(total) {
+    const el = $("contadorDuvidas");
+    el.textContent = String(total || 0);
+    el.classList.toggle("zero", !total);
+  }
+
+  function renderDuvidas() {
+    const alvo = $("listaDuvidas");
+    const itens = ESTADO.duvidas || [];
+    if (!itens.length) {
+      alvo.innerHTML = `<div class="duvidas-vazio">Nenhuma dúvida pendente. A IA está respondendo tudo o que já sabe. 🎉</div>`;
+      return;
+    }
+    alvo.innerHTML = itens.map((d) => `
+      <article class="duvida" data-duvida="${d.id}">
+        <div class="duvida-topo">
+          <strong>${escapar(d.nome || d.contato || "Cliente")}</strong>
+          <span>${horaCurta(d.criada_em)}</span>
+        </div>
+        <blockquote>${escapar(d.pergunta)}</blockquote>
+        <textarea rows="2" placeholder="Resposta oficial para ensinar a IA..."></textarea>
+        <div class="duvida-acoes">
+          <label class="check"><input type="checkbox" data-campo="salvar" checked> Salvar na base</label>
+          <label class="check"><input type="checkbox" data-campo="enviar" ${d.conversa_id ? "" : "disabled"}> Enviar ao cliente</label>
+          <span>
+            <button data-acao="ignorar">Ignorar</button>
+            <button class="primario" data-acao="responder">Responder</button>
+          </span>
+        </div>
+      </article>`).join("");
+  }
+
+  function renderConhecimento() {
+    const itens = ESTADO.conhecimento || [];
+    $("tituloBase").textContent = `Base de conhecimento (${itens.length})`;
+    const alvo = $("listaConhecimento");
+    if (!itens.length) {
+      alvo.innerHTML = `<div class="duvidas-vazio">A base ainda está vazia.</div>`;
+      return;
+    }
+    alvo.innerHTML = itens.map((entrada) => `
+      <div class="conhecimento-item">
+        <div>
+          <b>${escapar(entrada.pergunta)}</b><br>
+          <span>${escapar(entrada.resposta)}</span>
+        </div>
+        <button data-remover="${entrada.indice}" title="Remover da base">✕</button>
+      </div>`).join("");
+  }
+
+  async function carregarDuvidas() {
+    const [fila, base] = await Promise.all([
+      api("/atendimento/duvidas?status=pendente"),
+      api("/atendimento/conhecimento"),
+    ]);
+    ESTADO.duvidas = fila.itens || [];
+    ESTADO.conhecimento = base.itens || [];
+    renderDuvidas();
+    renderConhecimento();
+    definirContadorDuvidas(ESTADO.duvidas.length);
+  }
+
+  async function abrirDuvidas() {
+    $("dialogDuvidas").showModal();
+    await carregarDuvidas();
+  }
+
+  async function responderDuvida(card, acao) {
+    const id = Number(card.dataset.duvida);
+    if (acao === "ignorar") {
+      await api(`/atendimento/duvidas/${id}/ignorar`, { metodo: "POST" });
+      toast("Dúvida ignorada.");
+      return;
+    }
+    const resposta = card.querySelector("textarea").value.trim();
+    if (resposta.length < 3) {
+      toast("Escreva a resposta oficial antes de enviar.", true);
+      return;
+    }
+    const salvar = card.querySelector('[data-campo="salvar"]').checked;
+    const enviar = card.querySelector('[data-campo="enviar"]').checked;
+    const retorno = await api(`/atendimento/duvidas/${id}/responder`, {
+      metodo: "POST",
+      corpo: { resposta, salvar_na_base: salvar, enviar_ao_cliente: enviar },
+    });
+    if (salvar && retorno.enviado_ao_cliente) {
+      toast("Resposta enviada ao cliente e salva na base.");
+    } else if (retorno.enviado_ao_cliente) {
+      toast("Resposta enviada ao cliente.");
+    } else if (salvar) {
+      toast("Resposta salva e ensinada à IA.");
+    } else {
+      toast("Resposta registrada sem alterar a base.");
+    }
+  }
+
+  function renderHistorico(dados) {
+    const alvo = $("historicoResultado");
+    const candidatos = dados.candidatos || [];
+    ESTADO.historico = candidatos;
+    if (!candidatos.length) {
+      alvo.innerHTML = `<div class="duvidas-vazio">Não encontrei pares de pergunta e resposta nesse arquivo. Confira se é o .txt exportado do WhatsApp.</div>`;
+      return;
+    }
+    alvo.innerHTML = `
+      <div class="historico-resumo">
+        ${dados.mensagens} mensagens lidas · ${candidatos.length} sugestões
+        ${dados.negocio_detectado.length ? `· atendimento identificado: ${escapar(dados.negocio_detectado.join(", "))}` : ""}
+      </div>
+      ${candidatos.map((item, indice) => `
+        <article class="duvida candidato" data-indice="${indice}">
+          <label class="check"><input type="checkbox" ${item.ja_na_base ? "" : "checked"}> usar esta resposta</label>
+          <blockquote>${escapar(item.pergunta)}</blockquote>
+          <textarea rows="2">${escapar(item.resposta)}</textarea>
+        </article>`).join("")}
+      <div class="acoes-dialogo" style="margin-top:10px">
+        <button type="button" class="primario" id="btnSalvarHistorico">Salvar selecionadas na base</button>
+      </div>`;
+  }
+
+  async function analisarHistorico() {
+    const texto = $("historicoTexto").value.trim();
+    if (texto.length < 10) {
+      toast("Selecione o arquivo .txt ou cole o histórico.", true);
+      return;
+    }
+    const botao = $("btnAnalisarHistorico");
+    botao.disabled = true;
+    try {
+      const dados = await api("/atendimento/historico/analisar", {
+        metodo: "POST",
+        corpo: { texto, negocio: (ESTADO.config && ESTADO.config.nome_negocio) || "" },
+      });
+      renderHistorico(dados);
+      toast(`${dados.total} sugestão(ões) encontradas.`);
+    } catch (erro) {
+      toast(erro.message, true);
+    } finally {
+      botao.disabled = false;
+    }
+  }
+
+  async function salvarHistorico() {
+    const cards = Array.from(
+      document.querySelectorAll("#historicoResultado .candidato")
+    );
+    const itens = cards
+      .filter((card) => card.querySelector('input[type="checkbox"]').checked)
+      .map((card) => ({
+        pergunta: card.querySelector("blockquote").textContent.trim(),
+        resposta: card.querySelector("textarea").value.trim(),
+      }))
+      .filter((item) => item.pergunta.length >= 3 && item.resposta.length >= 3);
+    if (!itens.length) {
+      toast("Selecione pelo menos uma sugestão.", true);
+      return;
+    }
+    try {
+      for (const item of itens) {
+        await api("/atendimento/conhecimento", { metodo: "POST", corpo: item });
+      }
+      await carregarDuvidas();
+      toast(`${itens.length} resposta(s) salvas na base.`);
+    } catch (erro) {
+      toast(erro.message, true);
+    }
+  }
+
+  async function adicionarConhecimento(evento) {
+    evento.preventDefault();
+    const pergunta = $("novaPergunta").value.trim();
+    const resposta = $("novaResposta").value.trim();
+    if (pergunta.length < 3 || resposta.length < 3) {
+      toast("Preencha a pergunta e a resposta.", true);
+      return;
+    }
+    try {
+      await api("/atendimento/conhecimento", {
+        metodo: "POST",
+        corpo: { pergunta, resposta },
+      });
+      $("novaPergunta").value = "";
+      $("novaResposta").value = "";
+      await carregarDuvidas();
+      toast("Conhecimento adicionado à base.");
+    } catch (erro) {
+      toast(erro.message, true);
+    }
+  }
+
+  function abrirNova() {
+    $("campoContato").value = "";
+    $("dialogNova").showModal();
+    setTimeout(() => $("campoContato").focus(), 60);
+  }
+
+  async function criarNova(evento) {
+    evento.preventDefault();
+    const contato = $("campoContato").value.trim();
+    if (contato.length < 2) { toast("Informe um nome ou telefone.", true); return; }
+    try {
+      const detalhe = await api("/atendimento/conversas", {
+        metodo: "POST",
+        corpo: { contato, nome: contato },
+      });
+      $("dialogNova").close();
+      ESTADO.atual = detalhe;
+      ESTADO.ultimoCount = detalhe.mensagens.length;
+      await carregarLista();
+      renderLista();
+      renderChat();
+      $("texto").focus();
+    } catch (erro) {
+      toast(erro.message, true);
+    }
+  }
+
+  /* ---------------------------- listeners ------------------------------- */
+  $("btnEntrar").addEventListener("click", entrar);
+  $("campoChave").addEventListener("keydown", (e) => { if (e.key === "Enter") entrar(); });
+
+  $("btnNova").addEventListener("click", abrirNova);
+  $("btnCancelarNova").addEventListener("click", () => $("dialogNova").close());
+  $("formNova").addEventListener("submit", criarNova);
+
+  $("btnDuvidas").addEventListener("click", () => {
+    abrirDuvidas().catch((erro) => toast(erro.message, true));
+  });
+  $("btnFecharDuvidas").addEventListener("click", () => $("dialogDuvidas").close());
+  $("btnFecharDuvidas2").addEventListener("click", () => $("dialogDuvidas").close());
+  $("formConhecimento").addEventListener("submit", adicionarConhecimento);
+
+  $("btnAnalisarHistorico").addEventListener("click", analisarHistorico);
+  $("arquivoHistorico").addEventListener("change", async () => {
+    const arquivo = $("arquivoHistorico").files[0];
+    if (!arquivo) return;
+    try {
+      $("historicoTexto").value = await arquivo.text();
+      toast("Arquivo carregado. Clique em Analisar histórico.");
+    } catch (erro) {
+      toast("Não consegui ler esse arquivo.", true);
+    }
+  });
+  $("historicoResultado").addEventListener("click", (e) => {
+    if (e.target.closest("#btnSalvarHistorico")) salvarHistorico();
+  });
+
+  $("listaDuvidas").addEventListener("click", async (e) => {
+    const botao = e.target.closest("[data-acao]");
+    if (!botao) return;
+    const card = botao.closest("[data-duvida]");
+    if (!card) return;
+    botao.disabled = true;
+    try {
+      await responderDuvida(card, botao.dataset.acao);
+      await carregarDuvidas();
+    } catch (erro) {
+      toast(erro.message, true);
+    } finally {
+      botao.disabled = false;
+    }
+  });
+
+  $("listaConhecimento").addEventListener("click", async (e) => {
+    const botao = e.target.closest("[data-remover]");
+    if (!botao) return;
+    if (!confirm("Remover esta resposta da base de conhecimento?")) return;
+    try {
+      await api(`/atendimento/conhecimento/${botao.dataset.remover}`, { metodo: "DELETE" });
+      await carregarDuvidas();
+      toast("Entrada removida da base.");
+    } catch (erro) {
+      toast(erro.message, true);
+    }
+  });
+
+  $("formEnvio").addEventListener("submit", (e) => {
+    e.preventDefault();
+    enviarTexto();
+  });
+  $("texto").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      enviarTexto();
+    }
+  });
+  $("texto").addEventListener("input", () => {
+    const campo = $("texto");
+    campo.style.height = "auto";
+    campo.style.height = Math.min(campo.scrollHeight, 130) + "px";
+  });
+
+  $("btnImagem").addEventListener("click", () => $("arquivo").click());
+  $("arquivo").addEventListener("change", () => {
+    if ($("arquivo").files[0]) enviarImagem($("arquivo").files[0]);
+  });
+
+  $("btnFaixaAssumir").addEventListener("click", () => {
+    if (ESTADO.atual) acao(ESTADO.atual.conversa.id, "assumir");
+  });
+
+  $("conversas").addEventListener("click", (e) => {
+    const botao = e.target.closest("[data-id]");
+    if (botao) selecionar(Number(botao.dataset.id)).catch((erro) => toast(erro.message, true));
+  });
+
+  $("chat").addEventListener("click", (e) => {
+    const botao = e.target.closest("[data-acao]");
+    if (!botao || !ESTADO.atual) return;
+    const nome = botao.dataset.acao;
+    if (nome === "encerrar" && !confirm("Encerrar esta conversa?")) return;
+    acao(ESTADO.atual.conversa.id, nome);
+  });
+
+  $("busca").addEventListener("input", (e) => {
+    ESTADO.busca = e.target.value;
+    renderLista();
+  });
+
+  $("filtros").addEventListener("click", (e) => {
+    const botao = e.target.closest("[data-filtro]");
+    if (!botao) return;
+    ESTADO.filtro = botao.dataset.filtro;
+    document.querySelectorAll("#filtros button").forEach((b) => b.classList.toggle("ativo", b === botao));
+    renderLista();
+  });
+
+  $("btnVerAlerta").addEventListener("click", () => {
+    ESTADO.filtro = "aguardando_humano";
+    document.querySelectorAll("#filtros button").forEach((b) => b.classList.toggle("ativo", b.dataset.filtro === "aguardando_humano"));
+    renderLista();
+    const conversa = ESTADO.conversas.find((c) => c.estado === "aguardando_humano");
+    if (conversa) selecionar(conversa.id).catch((erro) => toast(erro.message, true));
+  });
+
+  /* ------------------------------- boot --------------------------------- */
+  if (CHAVE) {
+    iniciar().then(fecharLogin).catch(() => abrirLogin());
+  } else {
+    abrirLogin();
+  }
+</script>
+</body>
+</html>

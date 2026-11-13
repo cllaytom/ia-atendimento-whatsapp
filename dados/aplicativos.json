@@ -1,0 +1,17 @@
+{
+  "_instrucoes": "Mapa de aplicativo de IPTV por aparelho. Chave = marca da TV ou modelo do TV Box (o agente procura o texto dentro do que o cliente informou). Valor = aplicativo indicado. Apps usados: SmartOne, IBO Player, XCIPTV e DreamTV.",
+  "_alternativas": "Se o cliente nao conseguir instalar o app indicado, o atendente pode sugerir: SmartOne, IBO Player, XCIPTV ou DreamTV.",
+  "samsung": "SmartOne",
+  "lg": "SmartOne",
+  "tcl": "SmartOne",
+  "philco": "SmartOne",
+  "panasonic": "SmartOne",
+  "sony": "SmartOne",
+  "hisense": "SmartOne",
+  "aoc": "SmartOne",
+  "xiaomi": "SmartOne",
+  "fire tv": "IBO Player",
+  "mxq": "XCIPTV",
+  "tx3 mini": "XCIPTV",
+  "tv box": "XCIPTV"
+}
