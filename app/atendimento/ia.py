@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from dataclasses import dataclass
 
 import httpx
@@ -10,7 +11,6 @@ from . import config, conhecimento, oferta
 from .prompts import sistema
 
 logger = logging.getLogger("atendimento.ia")
-
 MARCADOR_TRANSFERIR = "[[TRANSFERIR]]"
 
 
@@ -29,21 +29,17 @@ def _extrair_conteudo(dados: dict) -> str:
     escolhas = dados.get("choices") or []
     if not escolhas:
         return ""
-    mensagem = escolhas[0].get("message") or {}
-    conteudo = mensagem.get("content")
+    conteudo = (escolhas[0].get("message") or {}).get("content")
     if isinstance(conteudo, list):
-        partes = []
-        for parte in conteudo:
-            if isinstance(parte, dict) and parte.get("type") == "text":
-                partes.append(parte.get("text") or "")
-            elif isinstance(parte, str):
-                partes.append(parte)
-        return "".join(partes)
-    return conteudo or ""
+        return "".join(
+            (parte.get("text") or "") if isinstance(parte, dict) and parte.get("type") == "text"
+            else parte if isinstance(parte, str) else ""
+            for parte in conteudo
+        )
+    return conteudo if isinstance(conteudo, str) else ""
 
 
 def _precos_permitidos(texto: str) -> bool:
-    """Bloqueia respostas com valores que nao existem no catalogo."""
     for achado in re.finditer(r"R\$\s*([\d.]+)(?:,(\d{1,2}))?", texto):
         inteiro = achado.group(1).replace(".", "")
         decimal = achado.group(2) or "0"
@@ -72,18 +68,63 @@ def _promessas_permitidas(texto: str) -> bool:
     return True
 
 
-def responder(historico: list[dict], etapa: str, dados: dict) -> RespostaIA | None:
-    """Consulta o modelo. Retorna None quando a IA nao esta configurada ou falhou."""
-    if not disponivel():
-        return None
+def _consultar(payload: dict) -> dict | None:
+    # Duas tentativas no maximo; nenhuma chave ou corpo remoto vai para o log.
+    timeout = max(0.1, min(config.IA_TIMEOUT, 8.0))
+    for tentativa in range(2):
+        try:
+            resposta = httpx.post(
+                f"{config.IA_BASE_URL}/chat/completions",
+                headers={"Authorization": f"Bearer {config.IA_API_KEY}", "Content-Type": "application/json"},
+                json=payload,
+                timeout=timeout,
+            )
+        except httpx.TimeoutException:
+            logger.warning("IA: tempo de espera excedido; usando respostas roteirizadas.")
+            return None
+        except httpx.RequestError:
+            logger.warning("IA: falha de conexao; usando respostas roteirizadas.")
+            return None
 
+        status = resposta.status_code
+        if status in (500, 502, 503, 504) and tentativa == 0:
+            logger.warning("IA: HTTP %s temporario; nova tentativa em 0,5 segundo.", status)
+            time.sleep(0.5)
+            continue
+        if status >= 400:
+            motivo = {
+                400: "requisicao rejeitada; confira modelo e parametros",
+                401: "autenticacao recusada; confira IA_API_KEY",
+                403: "acesso negado; confira chave e permissoes",
+                404: "modelo ou endpoint nao encontrado; confira IA_MODELO e IA_BASE_URL",
+                429: "limite de uso ou cota atingido",
+                503: "servico do provedor indisponivel apos nova tentativa",
+            }.get(status, "falha retornada pelo provedor")
+            logger.warning("IA: HTTP %s (%s); usando respostas roteirizadas.", status, motivo)
+            return None
+        try:
+            resultado = resposta.json()
+        except ValueError:
+            logger.warning("IA: resposta JSON invalida.")
+            return None
+        if not isinstance(resultado, dict):
+            logger.warning("IA: formato de resposta inesperado.")
+            return None
+        logger.info("IA: consulta concluida com sucesso (HTTP %s).", status)
+        return resultado
+    return None
+
+
+def responder(historico: list[dict], etapa: str, dados: dict) -> RespostaIA | None:
+    if not disponivel():
+        logger.warning("IA desativada: preencha IA_BASE_URL e IA_API_KEY no .env e reinicie.")
+        return None
     pergunta_atual = ""
     for item in reversed(historico):
         if item.get("autor") == "cliente" and (item.get("texto") or "").strip():
             pergunta_atual = item["texto"]
             break
     base_conhecimento = conhecimento.para_prompt(pergunta_atual)
-
     mensagens = [{"role": "system", "content": sistema(etapa, dados, base_conhecimento)}]
     for item in historico[-16:]:
         autor = item.get("autor")
@@ -94,44 +135,25 @@ def responder(historico: list[dict], etapa: str, dados: dict) -> RespostaIA | No
             mensagens.append({"role": "user", "content": texto})
         elif autor in ("ia", "humano"):
             mensagens.append({"role": "assistant", "content": texto})
-
     if len(mensagens) == 1:
         return None
-
-    payload = {
-        "model": config.IA_MODELO,
-        "messages": mensagens,
-        "temperature": 0.25,
-        "max_tokens": 400,
-    }
+    payload = {"model": config.IA_MODELO, "messages": mensagens, "temperature": 0.25, "max_tokens": 400}
     try:
-        resposta = httpx.post(
-            f"{config.IA_BASE_URL}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {config.IA_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=config.IA_TIMEOUT,
-        )
-        resposta.raise_for_status()
-        dados_resposta = resposta.json()
-    except Exception:
-        logger.exception("Falha ao consultar a IA; usando respostas roteirizadas.")
+        dados_resposta = _consultar(payload)
+        if dados_resposta is None:
+            return None
+        texto = _extrair_conteudo(dados_resposta).strip()
+    except Exception as erro:
+        logger.error("IA: falha inesperada (%s); usando respostas roteirizadas.", type(erro).__name__)
         return None
-
-    texto = _extrair_conteudo(dados_resposta).strip()
     if not texto:
+        logger.warning("IA: provedor retornou resposta vazia.")
         return None
-
     transferir = MARCADOR_TRANSFERIR in texto
     texto = texto.replace(MARCADOR_TRANSFERIR, "").strip()
-
     if texto and not (_precos_permitidos(texto) and _promessas_permitidas(texto)):
-        logger.warning("Resposta da IA bloqueada por conflitar com o catalogo: %s", texto)
+        logger.warning("Resposta da IA bloqueada por conflitar com o catalogo.")
         return None
-
     if not texto and not transferir:
         return None
-
     return RespostaIA(texto=texto, transferir=transferir, motivo="ia_identificou")
