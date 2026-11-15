@@ -1,6 +1,6 @@
 # Fila automatica: teste de abertura por nao lidas
 
-Reutiliza SCRIPT/recentes do monitor e PreviaMotor. Nao altera o motor nem ativa envio. Novo ponto de entrada para validar a selecao automatica, restrito a UM contato. Nao e fila geral de atendimento nem integracao com painel.
+Windows/PowerShell interativo. Reutiliza SCRIPT/recentes e PreviaMotor, restrito a UM contato. Sem envio, IA ou alertas; nao integra fila humana real.
 
 ```powershell
 $env:WHATSAPP_ENVIAR="0"
@@ -9,10 +9,10 @@ $env:WHATSAPP_NOME_TESTE="NOME EXATO"
 python -m app.atendimento.fila_whatsapp
 ```
 
-Pare a instancia anterior antes de executar. Na janela criada pelo programa, deixe a conversa de teste visivel na lista, mas nao selecionada. Apos o horario indicado, envie pelo outro celular quero internet. O programa procura aria-label com mensagens nao lidas/unread, exige uma unica linha com o nome e clica nela. Esse clique pode marcar as mensagens como lidas. Dados do telefone continuam sendo vinculo MANUAL de teste, nao identidade verificada automaticamente.
+Pare a instancia anterior. Deixe o contato visivel na lista, nao selecionado. Apos o horario indicado, envie mensagem pelo outro celular. O programa seleciona a unica linha carregada com nome exato e indicador de nao lidas; isso pode marcar mensagens como lidas. Telefone informado manualmente, nao verificado automaticamente.
 
-Depois de confirmar o cabecalho, processa apenas elementos com horario original posterior ao inicio. O minuto de inicio e ignorado. Mensagens sem horario, futuras ou com direcao desconhecida nao consultam o motor. Banco do teste em memoria; sem IA, alertas externos ou envio. Respostas saem apenas no terminal. Teste tambem exige validar o seletor de nao lidas no navegador real; ainda nao homologado.
+Depois da selecao automatica, trocar de conversa ou detectar cabecalho diferente pausa a fila sem fechar o navegador. Enquanto pausada nao consulta conversas nem clica. No terminal em foco, P pausa e R retoma, sem Enter. R autoriza reabrir o contato mesmo sem indicador de nao lidas, preserva o estado do motor em memoria e cria novo marco temporal. Mensagens do intervalo pausado e do minuto de retomada sao ignoradas. Aguarde o novo horario indicado antes de enviar outro teste. R nao devolve automaticamente ao bot uma conversa que chegou a aguardando_humano; nesse caso reinicie o teste. Ctrl+C encerra e tenta fechar a janela.
 
-Somente linhas atualmente carregadas. Nao rola a lista, nao descobre arquivadas ou linhas fora do DOM e nao garante captar toda mensagem. Nao abra manualmente o contato antes do disparo, pois a sinalizacao de nao lidas pode desaparecer. Depois de selecionar automaticamente, mantem a leitura desse contato enquanto ele continua localizado na lista. Mudanca externa da conversa apos selecao encerra; saida recente pausa a previa ate reiniciar. Perda detectada da lista/rede encerra; nao detecta toda desconexao possivel.
+Saida recente tambem pausa, sem processar entradas do mesmo lote. Falta de confirmacao apos clique pausa. Perda detectada de lista/rede ainda encerra e exige reinicio. A verificacao de troca e por polling, nao atomica: nao detecta necessariamente troca e retorno entre leituras. Antes da primeira selecao automatica, use P se precisar controlar a janela sem cliques do programa. Apos R, nao mexa ate confirmar abertura.
 
-Indicadores de nao lidas podem incluir mensagens antigas: abrir por esse indicador nao as torna recentes; o filtro de horario continua obrigatorio. Nomes duplicados visiveis bloqueiam a selecao, mas nao garantem detectar homonimos fora da lista carregada. Nao habilitar envio a partir deste teste. Suporte simultaneo a varios contatos, identidade persistente e fila humana real continuam pendentes.
+So linhas carregadas: nao rola lista nem encontra arquivadas/fora do DOM. Nomes duplicados visiveis bloqueiam, mas nao excluem homonimos fora da lista. Horario original obrigatorio e posterior ao marco; sem horario, futuro ou direcao desconhecida nao consulta motor. Estrutura calibrada e heuristica de previa, nao autorizacao de envio. Nao ha garantia de capturar todas as mensagens. Estado do teste apenas em memoria. Suporte a varios contatos e painel persistente continuam pendentes. Nao validado em navegador real.
