@@ -27,6 +27,8 @@ ASSUNTOS_PRODUTO = {
     "seguranca", "confiavel", "confianca", "confiar", "golpe", "fraude",
     "virus", "hacker", "privacidade", "criptografia", "criptografado",
     "protegido", "protege", "net", "dados", "ilimitada", "ilimitado",
+    "foto", "print", "comprovante", "senha", "login", "email", "loja",
+    "pago", "pagar", "pagamento", "conectando", "conectar", "marca",
 }
 
 
@@ -102,19 +104,24 @@ def _termos(entrada: dict) -> list[str]:
 
 
 def _pontuar(texto_normalizado: str, entrada: dict) -> float:
+    """Quanto a mensagem do cliente combina com a entrada (0 a 1).
+
+    Basta um termo forte aparecer: com varios termos por entrada, exigir uma
+    fracao deles fazia perguntas curtas ("como pago?", "e golpe?") nunca
+    encontrarem a resposta certa.
+    """
     termos = _termos(entrada)
     if not termos:
         return 0.0
-    achados = 0
     for termo in termos:
         if not termo:
             continue
         if " " in termo:
             if termo in texto_normalizado:
-                achados += 1
+                return 1.0
         elif re.search(rf"\b{re.escape(termo)}\b", texto_normalizado):
-            achados += 1
-    return achados / len(termos)
+            return 1.0
+    return 0.0
 
 
 def buscar(texto: str) -> dict | None:
@@ -126,7 +133,7 @@ def buscar(texto: str) -> dict | None:
     melhor_nota = 0.0
     for entrada in carregar():
         nota = _pontuar(alvo, entrada)
-        if nota >= 0.6 and nota > melhor_nota:
+        if nota > melhor_nota:
             melhor = entrada
             melhor_nota = nota
     return melhor

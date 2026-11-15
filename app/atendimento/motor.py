@@ -472,6 +472,94 @@ def _apenas_saudacao(texto: str) -> bool:
     return bool(palavras) and len(palavras) <= 5 and set(palavras) <= saudacoes
 
 
+# Sinais de que o cliente esta respondendo a uma pergunta do atendimento
+# (operadora, recarga, Android, TV, TV Box...) e nao pedindo um novo servico.
+SINAIS_DE_RESPOSTA = (
+    "vivo",
+    "tim",
+    "claro",
+    "oi",
+    "recarga",
+    "recarreguei",
+    "android",
+    "celular",
+    "aparelho",
+    "smart",
+    "smartv",
+    "tv",
+    "televisao",
+    "televisor",
+    "samsung",
+    "lg",
+    "tcl",
+    "philips",
+    "roku",
+    "tvbox",
+    "box",
+    "modelo",
+    "instalei",
+    "instalado",
+    "baixei",
+    "tenho sim",
+    "uso sim",
+    "nao tenho",
+    "fiz",
+    "mes passado",
+    "sim",
+    "nao",
+    "talvez",
+    "claro que sim",
+    "isso",
+    "correto",
+    "exato",
+    "ok",
+    "pode ser",
+)
+
+
+def _parece_resposta(texto: str) -> bool:
+    return tem(texto, *SINAIS_DE_RESPOSTA)
+
+
+def _contexto_do_cliente(
+    db: Session, conversa: Conversa, texto: str
+) -> list[MensagemAtendimento]:
+    """Responde perguntas que misturam informacao do cliente com o catalogo.
+
+    Exemplo: "meu chip e vivo, fiz recarga mes passado". A base responderia so
+    sobre a recarga; aqui a resposta e escrita a partir das mensagens do proprio
+    cliente, sem inventar nada, e o atendimento segue para a proxima pergunta.
+    """
+    partes: list[str] = []
+    normalizado = normalizar(texto)
+
+    if tem(normalizado, "recarga", "recarreguei", "mes passado", "mes retrasado"):
+        partes.append(
+            "Sobre a *recarga*: ela precisa ter sido feita nos últimos 3 meses "
+            "para o chip ficar ativo."
+        )
+    if tem(normalizado, "vivo", "tim"):
+        partes.append("Anotei aqui a informação do seu chip. 👍")
+    elif tem(normalizado, "claro", "oi"):
+        partes.append(
+            "Trabalhamos com chips *TIM* e *Vivo*. Com outra operadora a ativação "
+            "não funciona."
+        )
+    if tem(normalizado, "android"):
+        partes.append("Perfeito, o Android é o sistema que funciona no nosso serviço.")
+    if tem(normalizado, "smart", "smartv", "samsung", "lg", "tcl", "philips"):
+        partes.append("Ótimo, Smart TV é o que precisamos para o IPTV. 📺")
+
+    if not partes:
+        return []
+
+    mensagens = [_msg(db, conversa, "ia", "\n".join(partes))]
+    pergunta = pergunta_da_etapa(conversa)
+    if pergunta:
+        mensagens.append(_msg(db, conversa, "ia", pergunta))
+    return mensagens
+
+
 def tratar_menu(
     db: Session, conversa: Conversa, texto: str
 ) -> list[MensagemAtendimento]:
@@ -505,6 +593,16 @@ def tratar_menu(
             return [_msg(db, conversa, "ia", oferta.faq_teste())]
         return iniciar_internet(db, conversa, texto, teste=True, contratar=True)
 
+    # O cliente esta respondendo algo do atendimento ("meu chip e vivo",
+    # "uso android") em vez de pedir um servico: responde com base no que ele
+    # mesmo disse e retoma a pergunta da etapa, sem reiniciar o menu.
+    if _parece_resposta(texto) and not tem(
+        texto, "quero", "queria", "contratar", "ativar", "assinar"
+    ) and not parece_pergunta(texto):
+        respondidas = _contexto_do_cliente(db, conversa, texto)
+        if respondidas:
+            return respondidas
+
     faq = oferta.buscar_faq(texto)
     if faq and (
         parece_pergunta(texto)
@@ -530,6 +628,12 @@ def tratar_menu(
     if texto.strip() == "1" or (tem(texto, "internet") and not tem(texto, "iptv")):
         if parece_pergunta(texto) and not quer_contratar(texto) and not tem(
             texto, "quero", "queria", "ativar", "contratar"
+        ):
+            return responder_generico(db, conversa, texto)
+        # "nao consigo conectar a internet" e duvida/suporte, nao pedido de
+        # contratacao: responde pela base em vez de comecar o fluxo do zero.
+        if _parece_resposta(texto) and tem(
+            texto, "nao conecta", "conectando", "conectar", "sem internet", "nao funciona"
         ):
             return responder_generico(db, conversa, texto)
         return iniciar_internet(
@@ -632,7 +736,14 @@ def responder_generico(
     # A base so responde assuntos do produto vendido (internet + IPTV).
     aprendido = conhecimento.buscar(texto) if conhecimento.parece_produto(texto) else None
     if aprendido:
+        # Quando a mensagem traz informacao do cliente (operadora, recarga,
+        # Android, TV...), a resposta da base vem primeiro e o atendimento
+        # continua na pergunta da etapa, sem voltar ao menu.
         mensagens = [_msg(db, conversa, "ia", aprendido["resposta"])]
+        if _parece_resposta(texto) and conversa.etapa == MENU:
+            contexto = _contexto_do_cliente(db, conversa, texto)
+            if contexto:
+                mensagens.extend(contexto)
         pergunta = pergunta_da_etapa(conversa)
         if pergunta and conversa.etapa != MENU:
             mensagens.append(_msg(db, conversa, "ia", pergunta))

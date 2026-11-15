@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 
 from .atendimento import config as atendimento_config
 from .atendimento import router as atendimento
+from .atendimento import router_whatsapp
 from .config import API_KEY, APP_NAME, APP_VERSION, BASE_DIR
 from .database import Base, engine
 
@@ -28,6 +29,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title=APP_NAME, version=APP_VERSION, lifespan=lifespan, description="Atendimento automatico da ConnectTV. Autentique com o header X-API-Key.")
 app.include_router(atendimento.router)
+app.include_router(router_whatsapp.router)
 
 
 @app.get("/health", tags=["sistema"], summary="Verificacao de saude")
