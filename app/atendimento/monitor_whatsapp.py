@@ -10,14 +10,14 @@ const header = root && root.querySelector('header');
 const name = header ? header.innerText.split(String.fromCharCode(10)).map(s=>s.trim()).filter(Boolean)[0] : '';
 const rows = root ? [...root.querySelectorAll('[data-id]')].map(e=>{
   const body = e.querySelector('.selectable-text');
-  const incoming = e.matches('.message-in') || !!e.closest('.message-in') || !!e.querySelector('.message-in');
-  const outgoing = e.matches('.message-out') || !!e.closest('.message-out') || !!e.querySelector('.message-out');
+  const icons = [...e.querySelectorAll('[data-icon]')].map(n=>n.getAttribute('data-icon'));
+  const incoming = icons.includes('tail-in') || e.matches('.message-in') || !!e.closest('.message-in') || !!e.querySelector('.message-in');
+  const outgoing = icons.includes('tail-out') || e.matches('.message-out') || !!e.closest('.message-out') || !!e.querySelector('.message-out');
   const structure = [];
   let node = body || e;
   for (let i=0; node && node!==root && i<10; i++,node=node.parentElement) {
     structure.push({tag:node.tagName,classes:node.getAttribute('class')||'',role:node.getAttribute('role')||'',testid:node.getAttribute('data-testid')||'',attributes:[...node.attributes].map(a=>a.name)});
   }
-  const icons = [...e.querySelectorAll('[data-icon]')].map(n=>n.getAttribute('data-icon'));
   return {id:e.getAttribute('data-id'), text:body?body.innerText:'', direction:incoming&&!outgoing?'entrada':outgoing&&!incoming?'saida':'desconhecida',structure,icons};
 }) : [];
 return {online:navigator.onLine, list:!!document.querySelector('#pane-side'), name, rows};
@@ -43,6 +43,7 @@ def run():
         print('MONITOR SOMENTE LEITURA. Abra a conversa desejada nesta janela.', flush=True)
         print('Sem IA, sem motor, sem envio. Texto novo aparecera apenas neste terminal.', flush=True)
         print('Apenas conversa aberta e elementos carregados; nao monitora todas as conversas.', flush=True)
+        print('Direcao: tail-in=entrada, tail-out=saida. Sem sinal ou com conflito=desconhecida.', flush=True)
         print('Diagnostico automatico: ate 2 estruturas por conversa; sem IDs, telefone ou texto dentro do bloco tecnico.', flush=True)
         active = None
         seen = set()
@@ -95,7 +96,10 @@ def run():
         raise
     finally:
         if driver is not None:
-            driver.quit()
+            try:
+                driver.quit()
+            except (Exception, KeyboardInterrupt):
+                print('Nao foi possivel concluir o fechamento automatico. Feche somente a janela do bot, se ainda estiver aberta.', flush=True)
 
 if __name__ == '__main__':
     run()
