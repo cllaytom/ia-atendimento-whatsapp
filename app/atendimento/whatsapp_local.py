@@ -9,7 +9,9 @@ from ..database import Base, engine
 
 def snapshot(driver):
     return driver.execute_script("""
-      return {headers:[...document.querySelectorAll('#main header span[title]')].map(e=>e.getAttribute('title')),
+      const header = document.querySelector('#main header');
+      const headers = header ? header.innerText.split(String.fromCharCode(10)).map(s=>s.trim()).filter(Boolean) : [];
+      return {headers,
       rows:[...document.querySelectorAll('#main [data-id]')].slice(-30).map(e=>{
         const a=e.matches('[data-pre-plain-text]')?e:e.querySelector('[data-pre-plain-text]');
         const t=e.querySelector('.selectable-text');
