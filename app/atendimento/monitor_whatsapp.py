@@ -3,6 +3,7 @@ import json
 import os
 import time
 from . import config
+from .vigia_whatsapp import horario
 
 SCRIPT = '''
 const root = document.querySelector('#main');
@@ -30,6 +31,7 @@ if(root) for(const block of root.querySelectorAll('.focusable-list-item')) {
 }
 const rows = root ? [...root.querySelectorAll('[data-id]')].map(e=>{
   const body = e.querySelector('.selectable-text');
+  const author = e.matches('[data-pre-plain-text]') ? e : e.querySelector('[data-pre-plain-text]');
   const icons = [...e.querySelectorAll('[data-icon]')].map(n=>n.getAttribute('data-icon'));
   const incoming = icons.includes('tail-in') || e.matches('.message-in') || !!e.closest('.message-in') || !!e.querySelector('.message-in');
   const outgoing = icons.includes('tail-out') || e.matches('.message-out') || !!e.closest('.message-out') || !!e.querySelector('.message-out');
@@ -46,10 +48,32 @@ const rows = root ? [...root.querySelectorAll('[data-id]')].map(e=>{
   for (let i=0; node && node!==root && i<10; i++,node=node.parentElement) {
     structure.push({tag:node.tagName,classes:node.getAttribute('class')||'',role:node.getAttribute('role')||'',testid:node.getAttribute('data-testid')||'',attributes:[...node.attributes].map(a=>a.name)});
   }
-  return {id:e.getAttribute('data-id'), text:body?body.innerText:'', direction,evidence,structure,icons};
+  return {id:e.getAttribute('data-id'), author:author?author.getAttribute('data-pre-plain-text'):'', text:body?body.innerText:'', direction,evidence,structure,icons};
 }) : [];
 return {online:navigator.onLine, list:!!document.querySelector('#pane-side'), name, rows};
 '''
+
+def recentes(rows, seen, since, now):
+    fresh = []
+    batch = set()
+    missing = False
+    for row in rows:
+        ident = row['id']
+        if not ident or ident in seen or ident in batch:
+            continue
+        stamp = horario(row.get('author'))
+        if stamp is None:
+            missing = True
+            continue
+        batch.add(ident)
+        if stamp <= since:
+            seen.add(ident)
+            continue
+        if stamp > now:
+            continue
+        seen.add(ident)
+        fresh.append(row)
+    return fresh, missing
 
 def run():
     from selenium import webdriver
@@ -77,44 +101,47 @@ def run():
         print('Nenhuma resposta sera enviada. Sugestoes do motor somente se PREVIA ATIVA.', flush=True)
         print('Apenas conversa aberta e elementos carregados; nao monitora todas as conversas.', flush=True)
         print('Direcao: marcadores ou estrutura calibrada com entrada E saida visiveis. Ambiguidade=desconhecida.', flush=True)
-        print('Estrutura calibrada e uma heuristica para previa, nao confirma telefone nem autoriza envio.', flush=True)
-        print('Diagnostico automatico: ate 2 estruturas por conversa; sem IDs, telefone ou texto dentro do bloco tecnico.', flush=True)
+        print('FILTRO DE HISTORICO ATIVO: horario original obrigatorio; mensagens do minuto de abertura sao ignoradas.', flush=True)
         active = None
+        since = None
         seen = set()
         previous = None
         diagnostic_count = 0
         diagnostic_seen = set()
+        warned_time = False
         while True:
             state = driver.execute_script(SCRIPT)
             if not state['online'] or not state['list'] or not state['name']:
                 if previa and active == previa.nome:
                     previa.pausar()
                 active = None
+                since = None
                 seen.clear()
                 notice = 'Aguardando conexao, login ou conversa aberta; leitura pausada.'
             else:
                 name = state['name']
                 rows = state['rows']
-                ids = {r['id'] for r in rows if r['id']}
                 if active != name:
                     if previa and active == previa.nome:
                         previa.pausar()
                     active = name
-                    seen = ids
+                    since = time.time()
+                    seen = {r['id'] for r in rows if r['id']}
                     diagnostic_count = 0
                     diagnostic_seen = set()
+                    warned_time = False
+                    start = time.strftime('%H:%M', time.localtime((int(since)//60+1)*60))
+                    print('ENVIE MENSAGENS DE TESTE A PARTIR DE ' + start + '. Historico tardio nao consulta motor nem pausa previa.', flush=True)
                     notice = 'Observando: ' + name + ' | telefone NAO confirmado | historico inicial ignorado.'
                 else:
-                    notice = 'Observando: ' + name + ' | telefone NAO confirmado | aguardando novos elementos.'
-                    batch = set()
-                    fresh = [r for r in rows if r['id'] and r['id'] not in seen]
+                    notice = 'Observando: ' + name + ' | telefone NAO confirmado | aguardando mensagens com horario valido.'
+                    fresh, missing = recentes(rows, seen, since, time.time())
+                    if missing and not warned_time:
+                        warned_time = True
+                        print('AVISO: ha elementos sem horario reconhecido. Eles nao consultam motor nem pausam previa. Formato esperado: [HH:MM, DD/MM/AAAA].', flush=True)
                     if previa and name == previa.nome and any(r['direction'] == 'saida' for r in fresh):
                         previa.pausar()
                     for row in fresh:
-                        ident = row['id']
-                        if ident in batch:
-                            continue
-                        batch.add(ident)
                         text = row['text'].strip()
                         if text:
                             print(time.strftime('%H:%M:%S') + ' | ' + name + ' | ' + row['direction'] + ' | ' + text, flush=True)
@@ -127,7 +154,6 @@ def run():
                                 diagnostic_count += 1
                                 diagnostic_seen.add(key)
                                 print('DIAGNOSTICO_DIRECAO_' + str(diagnostic_count) + '=' + json.dumps(structure, ensure_ascii=True), flush=True)
-                    seen.update(ids)
             if notice != previous:
                 print(notice, flush=True)
                 previous = notice
