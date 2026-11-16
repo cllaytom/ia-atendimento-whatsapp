@@ -1,5 +1,7 @@
 from __future__ import annotations
 import re
+import logging
+import time
 from sqlalchemy import select
 from ..database import SessionLocal
 from ..models import Conversa
@@ -38,10 +40,10 @@ def receber(contato, texto, nome=None, imagem=None):
         novas = motor.processar_mensagem_cliente(db, conv, texto=texto)
         respostas = [m.texto for m in novas if m.autor == "ia" and m.texto]
         # Protecao temporaria: nao enviar pedidos de midia do motor legado.
-        if any(re.search(r"foto|print|imagem|v[ií]deo|[aá]udio", r, re.I) for r in respostas):
+        if any(re.search(r"(?:mand|envi|precis).{0,55}(?:foto|print|imagem|v[ií]deo|[aá]udio)", r, re.I) for r in respostas):
             motor.transferir(db, conv, "Conferir aplicativos por marca/modelo", aviso="")
             db.commit()
-            respostas = ["Informe por texto a marca e o modelo exatos do aparelho. Um atendente vai conferir os aplicativos compativeis e continuar o atendimento."]
+            respostas = ["Aguarde um momento, nossa equipe está verificando sua solicitação"]
         # O conector envia a lista em um unico balao. Aplica a regra existente
         # uma vez para esse envio, sem alterar a configuracao da IA.
         # Nenhum bloqueio global e introduzido: a espera e desta requisicao.
@@ -49,7 +51,9 @@ def receber(contato, texto, nome=None, imagem=None):
             # Encerra qualquer transacao de leitura antes da espera para que
             # uma intervencao humana seja visivel na consulta seguinte.
             db.commit()
+            inicio_pausa = time.perf_counter()
             pausas.esperar("\n\n".join(respostas))
+            logging.getLogger("atendimento.tempos").warning("Pausa adicional aplicada=%.3fs (alvo 2s)", time.perf_counter()-inicio_pausa)
         db.refresh(conv)
         # Se o humano assumiu durante a pausa, nao devolve resposta pendente.
         if conv.estado in (motor.ESTADO_HUMANO, motor.ESTADO_ENCERRADA):

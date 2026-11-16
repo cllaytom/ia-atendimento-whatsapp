@@ -1,0 +1,43 @@
+ATUALIZACAO DE SUPORTE — PRIMEIRA VERSAO PARA TESTE LOCAL
+
+Nenhuma alteracao foi publicada no GitHub por este pacote. Nenhum servico foi iniciado e nenhuma mensagem foi enviada.
+
+1. Pare o conector WhatsApp e o servidor Python.
+2. Extraia a pasta atualizacao_suporte dentro da raiz do projeto.
+3. No PowerShell, na raiz do projeto, execute:
+   python .\atualizacao_suporte\aplicar_atualizacao.py
+4. O comando acima apenas verifica. Se houver divergencia de versao, PARE e revise o erro. Nao altere os hashes nem force a instalacao.
+5. Se a verificacao passar e os dois processos estiverem parados:
+   python .\atualizacao_suporte\aplicar_atualizacao.py --aplicar
+   Confirme digitando APLICAR quando solicitado.
+6. Inicie somente o Python pelo comando habitual. A primeira inicializacao faz backup da base e insere 12 ensinamentos sem sobrescrever perguntas existentes; cria 4 pendencias de conhecimento em banco separado, exibidas junto das duvidas.
+7. Atualize o painel com Ctrl+F5. Abra Base e duvidas — filtros. Teste pelo simulador com o conector parado.
+8. Nao religue o envio real antes de validar o suporte, as transferencias e a pausa. O indicador de digitacao so pode ser validado em teste controlado do conector; nao se comprova pelo simulador.
+
+INCLUIDO
+- Suporte de internet por etapas: sinal, dados moveis, modo aviao, servidores, atualizacao e reinicio conforme aplicabilidade.
+- H/G/E/sem sinal: recuperar rede antes de insistir em servidores; H+ tratado como limitacao do servico.
+- Memoria persistida em conversa.dados; nao repetir tentativas afirmadas pelo cliente.
+- Confirmacao de navegacao nos dados moveis antes de considerar resolvido.
+- Encaminhamento por esgotamento, necessidade administrativa ou pedido explicito.
+- Somente aplicativo configurado em LINK_APP_ANDROID; sem aproveitar links antigos. Sem inventar link se estiver vazio.
+- Orientacao sobre chuva como possibilidade, sem atribuir sinal celular comum a satelite.
+- 12 ensinamentos ativos e quatro pendencias revisaveis; backup da base antes de inserir.
+- Tela unificada de base/duvidas com filtros por servico, intencao, situacao e texto. Classificacao automatica por termos, nao semantica.
+- Presenca digitando no conector index.cjs, renovada a cada 20s; limpeza em finally; sem envio em modo previa.
+- Pausa adicional fixa de 2s no processo Python, sem alterar o .env nem o modelo da IA.
+- Logs separados de processamento do atendimento, consulta da IA e pausa; no Node, tempo ate submeter ao WhatsApp, nao confirmacao de entrega.
+- Padronizacao da mensagem de encaminhamento solicitada.
+
+LIMITES IMPORTANTES
+- 30 testes do nucleo e validacao sintatica passaram. FastAPI/SQLAlchemy nao estao instalados no ambiente de preparacao; a integracao HTTP e o navegador nao foram validados.
+- As variaveis editaveis anteriores continuam sendo definicoes; este fluxo coleta apenas os dados previstos no codigo. Nao cria coleta arbitraria automaticamente.
+- A chave da API continua compartilhada; nao ha identificacao individual de atendentes.
+- Suporte de TV nao recebe procedimentos de celular; apos triagem usa a IA existente, se disponivel, ou encaminha quando nao ha orientacao suficiente.
+- A validacao usa os arquivos revisados do GitHub. Uma instalacao local em index.js, ou arquivos locais diferentes, e recusada para evitar sobrescrever codigo desconhecido.
+- Links e pedidos de midia antigos sao filtrados na leitura/resposta; nao ha exclusao silenciosa em massa do arquivo de origem.
+- Pausa e indicador de digitacao nao garantem evitar bloqueios do WhatsApp.
+- Este pacote nao liga o envio real e nao implementa pausa automatica do bot por intervencao apenas pelo celular.
+
+BACKUP E RECUO
+O instalador informa a pasta de backup dos arquivos originais. Para reverter, pare ambos os processos e restaure os tres arquivos modificados a partir dessa pasta. Os modulos novos ficarao sem uso apos restaurar main.py. Nao apague bancos nem bases sem revisar os dados criados depois da atualizacao. A base possui backup .antes-suporte-v2.bak; restaurar esse backup pode perder ensinamentos posteriores.

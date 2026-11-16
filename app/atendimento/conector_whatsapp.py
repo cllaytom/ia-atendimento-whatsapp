@@ -68,13 +68,24 @@ def main():
                     raise RuntimeError('Lista perdida; reinicie apos conferir a conexao.')
                 nomes = driver.execute_script("return [...new Set([...document.querySelectorAll('#pane-side span[title]')].map(e=>e.title))];") or []
                 for nome in nomes:
-                    abriu = driver.execute_script("const a=[...document.querySelectorAll('#pane-side span[title]')].filter(e=>e.title===arguments[0]);if(a.length!==1)return false;a[0].click();return true;", nome)
+                    abriu = driver.execute_script("const a=[...document.querySelectorAll('#pane-side span[title]')].filter(e=>e.title===arguments[0]);if(a.length!==1)return null;return a[0];", nome)
                     if not abriu:
                         continue
+                    abriu.click()
                     time.sleep(1)
                     rows = driver.execute_script(JS_ROWS) or []
                     numero = telefone(rows)
                     if not numero:
+                        print('FORMATO_IDS:', [
+                            re.sub(r'\d', '#', str(r.get('id')))
+                            for r in rows[-3:]
+                        ], flush=True)
+                        motivos = sorted({
+                            identidade(r.get('id'))[1] or 'Telefone reconhecido'
+                            for r in rows
+                        })
+                        print('IGNORADA:', nome, '| mensagens:', len(rows),
+                              '| motivos:', motivos, flush=True)
                         continue
                     novas = []
                     for r in rows:
@@ -83,6 +94,9 @@ def main():
                         if remoto == numero and r['id'] not in vistos and stamp and inicio < stamp <= time.time() and (r.get('texto') or '').strip():
                             novas.append(r)
                     if not novas:
+                        print('SEM ENTRADA ELEGIVEL:', nome,
+                              '| confira horario, IDs e mensagem posterior ao inicio',
+                              flush=True)
                         continue
                     if not live:
                         vistos.update(r['id'] for r in novas)

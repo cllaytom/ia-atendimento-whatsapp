@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+LINKSSH_TOKEN = os.getenv("LINKSSH_TOKEN", "")
+
 from ..config import DATA_DIR
 
 NOME_NEGOCIO = os.getenv("NOME_NEGOCIO", "ConnectTV")

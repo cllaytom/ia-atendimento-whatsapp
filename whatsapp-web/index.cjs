@@ -69,10 +69,28 @@ async function handle(msg) {
   if (msg.body.length > 4000) throw Error('Texto acima de 4000 caracteres.');
   state[id] = 'processando';
   save();
+  let typingStopped = false;
+  let typingStarted = false;
+  let typingTask = Promise.resolve();
+  let typingTimer;
+  const startedRequest = Date.now();
+  const refreshTyping = () => {
+    typingTask = typingTask.then(async () => {
+      if (!typingStopped && connected) await chat.sendStateTyping();
+    }).catch(() => console.warn('Indicador digitando indisponivel; processamento mantido.'));
+    return typingTask;
+  };
   try {
+    const before = await api('/whatsapp/status/' + number);
+    if (before.existe === false || before.estado === 'ia') {
+      typingStarted = true;
+      await refreshTyping();
+      typingTimer = setInterval(refreshTyping, 20000);
+    }
     const result = await api('/whatsapp/receber', { contato: number, texto: msg.body });
     if (!Array.isArray(result.respostas) || typeof result.estado !== 'string') throw Error('Resposta inesperada da API.');
-    const answer = result.respostas.filter(x => typeof x === 'string' && x.trim()).join('\n\n');
+    let answer = result.respostas.filter(x => typeof x === 'string' && x.trim()).join('\n\n');
+    if (answer && result.estado === 'aguardando_humano') answer = 'Aguarde um momento, nossa equipe está verificando sua solicitação';
     if (!answer) { state[id] = 'sem_resposta'; save(); return; }
     const status = await api('/whatsapp/status/' + number);
     if (!connected || status.estado !== result.estado || !['ia', 'aguardando_humano'].includes(status.estado)) {
@@ -81,11 +99,16 @@ async function handle(msg) {
     const sent = await client.sendMessage(msg.from, answer);
     if (!sent || !sent.id) throw Error('Resultado de envio indeterminado.');
     state[id] = 'enviado'; save();
+    console.log('Tempo desde consulta de estado ate submissao: ' + ((Date.now()-startedRequest)/1000).toFixed(3) + 's; inclui ponte, processamento e pausa.');
     console.log('Resposta submetida ao WhatsApp; entrega ao aparelho nao confirmada.');
   } catch (error) {
-    blocked.add(number);
     state[id] = 'falha_sem_retry'; save();
     throw error;
+  } finally {
+    typingStopped = true;
+    clearInterval(typingTimer);
+    await typingTask;
+    if (typingStarted) await chat.clearState().catch(() => {});
   }
 }
 client.on('message', msg => {
