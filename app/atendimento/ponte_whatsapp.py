@@ -3,7 +3,7 @@ import re
 from sqlalchemy import select
 from ..database import SessionLocal
 from ..models import Conversa
-from . import config, motor
+from . import motor
 
 CANAL = "whatsapp"
 
@@ -23,17 +23,6 @@ def _conversa_aberta(db, contato):
         Conversa.estado != motor.ESTADO_ENCERRADA
     ).order_by(Conversa.id.desc()).limit(1)).first()
 
-def _sem_ia():
-    config.IA_BASE_URL = ""
-    config.IA_API_KEY = ""
-    config.IA_FALLBACK_BASE_URL = ""
-    config.IA_FALLBACK_API_KEY = ""
-    # Bloqueia tambem o ponto de chamada do motor neste processo.
-    motor.ia.disponivel = lambda: False
-    motor.ia.responder = lambda *args, **kwargs: None
-
-_sem_ia()
-
 def receber(contato, texto, nome=None, imagem=None):
     contato = normalizar_contato(contato)
     if imagem:
@@ -41,7 +30,6 @@ def receber(contato, texto, nome=None, imagem=None):
     texto = (texto or "").strip()
     if not texto or len(texto) > 4000:
         raise ValueError("Texto vazio ou acima do limite.")
-    _sem_ia()
     db = SessionLocal()
     try:
         conv = _conversa_aberta(db, contato)
