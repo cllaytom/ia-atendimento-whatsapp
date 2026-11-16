@@ -50,6 +50,7 @@ def raiz():
 @app.get("/atendimento", include_in_schema=False)
 def atendimento_visual():
     pagina = (BASE_DIR / "web" / "atendimento.html").read_text(encoding="utf-8")
+    pagina = pagina.replace('<div class="acoes">', '<div class="acoes"><a class="botao" href="/indicadores">Indicadores</a>', 1)
     pagina = pagina.replace("</body>", '<script src="/ensino-chat.js?v=1"></script><script src="/segmentos.js?v=1"></script><script src="/revisao-suporte.js?v=1"></script></body>')
     return HTMLResponse(pagina, headers={"Cache-Control": "no-store"})
 
