@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from .atendimento import config as atendimento_config
 from .atendimento import router as atendimento
-from .atendimento import router_whatsapp
+from .atendimento import router_whatsapp, motor, segmentos
 from .config import API_KEY, APP_NAME, APP_VERSION, BASE_DIR
 from .database import Base, engine
 
@@ -30,6 +30,9 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title=APP_NAME, version=APP_VERSION, lifespan=lifespan, description="Atendimento automatico da ConnectTV. Autentique com o header X-API-Key.")
 app.include_router(atendimento.router)
 app.include_router(router_whatsapp.router)
+app.include_router(segmentos.router)
+# Adaptador compartilhado pelo simulador e pela ponte WhatsApp.
+motor.tratar_texto = segmentos.integrar(motor.tratar_texto)
 
 
 @app.get("/health", tags=["sistema"], summary="Verificacao de saude")
@@ -45,13 +48,18 @@ def raiz():
 @app.get("/atendimento", include_in_schema=False)
 def atendimento_visual():
     pagina = (BASE_DIR / "web" / "atendimento.html").read_text(encoding="utf-8")
-    pagina = pagina.replace("</body>", '<script src="/ensino-chat.js?v=1"></script></body>')
+    pagina = pagina.replace("</body>", '<script src="/ensino-chat.js?v=1"></script><script src="/segmentos.js?v=1"></script></body>')
     return HTMLResponse(pagina, headers={"Cache-Control": "no-store"})
 
 
 @app.get("/ensino-chat.js", include_in_schema=False)
 def ensino_chat_script():
     return FileResponse(BASE_DIR / "web" / "ensino-chat.js", media_type="text/javascript", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/segmentos.js", include_in_schema=False)
+def segmentos_script():
+    return FileResponse(BASE_DIR / "web" / "segmentos.js", media_type="text/javascript", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/treinamento", include_in_schema=False)
