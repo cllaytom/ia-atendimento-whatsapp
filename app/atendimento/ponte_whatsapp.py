@@ -3,7 +3,7 @@ import re
 from sqlalchemy import select
 from ..database import SessionLocal
 from ..models import Conversa
-from . import motor
+from . import motor, pausas
 
 CANAL = "whatsapp"
 
@@ -42,7 +42,18 @@ def receber(contato, texto, nome=None, imagem=None):
             motor.transferir(db, conv, "Conferir aplicativos por marca/modelo", aviso="")
             db.commit()
             respostas = ["Informe por texto a marca e o modelo exatos do aparelho. Um atendente vai conferir os aplicativos compativeis e continuar o atendimento."]
+        # O conector envia a lista em um unico balao. Aplica a regra existente
+        # uma vez para esse envio, sem alterar a configuracao da IA.
+        # Nenhum bloqueio global e introduzido: a espera e desta requisicao.
+        if respostas:
+            # Encerra qualquer transacao de leitura antes da espera para que
+            # uma intervencao humana seja visivel na consulta seguinte.
+            db.commit()
+            pausas.esperar("\n\n".join(respostas))
         db.refresh(conv)
+        # Se o humano assumiu durante a pausa, nao devolve resposta pendente.
+        if conv.estado in (motor.ESTADO_HUMANO, motor.ESTADO_ENCERRADA):
+            respostas = []
         return {"conversa_id": conv.id, "estado": conv.estado, "etapa": conv.etapa,
                 "respostas": [r.replace("[[TRANSFERIR]]", "").strip() for r in respostas],
                 "alerta_humano": conv.estado in (motor.ESTADO_AGUARDANDO, motor.ESTADO_HUMANO),
