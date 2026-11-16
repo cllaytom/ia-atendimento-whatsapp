@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..auditoria import registrar
 from ..database import get_db
-from ..models import Assinatura, Credencial, Lancamento, Plano
+from ..models import Assinatura, Credencial, Lancamento, Plano, Produto
 from ..schemas import (
     AssinaturaCreate,
     AssinaturaOut,
@@ -234,7 +234,19 @@ def renovar(assinatura_id: int, payload: RenovacaoIn, db: Session = Depends(get_
         ass.plano_nome = plano.nome
         ass.produto = plano.produto or ass.produto
 
-    dias = payload.dias or (plano.dias if plano else 30)
+    produto = None
+    if ass.produto:
+        produto = db.scalar(
+            select(Produto).where(
+                func.upper(Produto.nome) == ass.produto.strip().upper()
+            )
+        )
+
+    if produto and produto.duracao_fixa:
+        dias = produto.dias
+    else:
+        dias = payload.dias or (plano.dias if plano else 30)
+
     valor = payload.valor if payload.valor is not None else (
         plano.valor if plano and payload.plano_nome else ass.valor_final
     )
@@ -251,7 +263,7 @@ def renovar(assinatura_id: int, payload: RenovacaoIn, db: Session = Depends(get_
     if payload.forma_pagamento:
         ass.forma_pagamento = payload.forma_pagamento
 
-        produto_iptv = (ass.produto or "").strip().upper() == "IPTV"
+    produto_iptv = (ass.produto or "").strip().upper() == "IPTV"
     renovacao_apos_vencimento = bool(vencimento_anterior and vencimento_anterior < hoje)
 
     if produto_iptv and not renovacao_apos_vencimento:
@@ -353,6 +365,8 @@ def reativar(assinatura_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(ass)
     return ass
+
+
 @router.post("/importar-linkssh", summary="Importar clientes novos do LinkSSH")
 def importar_do_linkssh(db: Session = Depends(get_db)):
     token = (os.getenv("LINKSSH_TOKEN") or "").strip()
@@ -393,58 +407,17 @@ def importar_do_linkssh(db: Session = Depends(get_db)):
         novos.append(item)
         logins.add(item["usuario"].casefold())
 
-    if not novos:
-        return {
-            "importados": 0,
-            "receita": 0.0,
-            "despesa": 0.0,
-            "resultado": 0.0,
-            "ignorados": ignorados,
-        }
-
-    hoje = date.today()
-    receita = 0.0
-    despesa = 0.0
-
     for item in novos:
         assinatura = Assinatura(**item)
         db.add(assinatura)
         db.flush()
 
-        db.add(Lancamento(
-            assinatura_id=assinatura.id,
-            tipo="despesa",
-            data=hoje,
-            valor=1.0,
-            plano_nome=item["plano_nome"],
-            descricao=(
-                "Custo de importação LinkSSH — "
-                f"ID externo {item['dados_extras']['id_externo']}"
-            ),
-        ))
-        despesa += 1.0
-
-        if item["valor"] > 0:
-            db.add(Lancamento(
-                assinatura_id=assinatura.id,
-                tipo="pagamento",
-                data=hoje,
-                valor=item["valor"],
-                forma_pagamento="Importação LinkSSH",
-                plano_nome=item["plano_nome"],
-                descricao=(
-                    "Receita registrada na importação LinkSSH — "
-                    f"ID externo {item['dados_extras']['id_externo']}"
-                ),
-            ))
-            receita += item["valor"]
-
     db.commit()
 
     return {
         "importados": len(novos),
-        "receita": round(receita, 2),
-        "despesa": round(despesa, 2),
-        "resultado": round(receita - despesa, 2),
+        "receita": 0.0,
+        "despesa": 0.0,
+        "resultado": 0.0,
         "ignorados": ignorados,
     }
