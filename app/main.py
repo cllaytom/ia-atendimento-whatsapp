@@ -4,7 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from .atendimento import config as atendimento_config
 from .atendimento import router as atendimento
@@ -44,7 +44,14 @@ def raiz():
 
 @app.get("/atendimento", include_in_schema=False)
 def atendimento_visual():
-    return FileResponse(BASE_DIR / "web" / "atendimento.html")
+    pagina = (BASE_DIR / "web" / "atendimento.html").read_text(encoding="utf-8")
+    pagina = pagina.replace("</body>", '<script src="/ensino-chat.js?v=1"></script></body>')
+    return HTMLResponse(pagina, headers={"Cache-Control": "no-store"})
+
+
+@app.get("/ensino-chat.js", include_in_schema=False)
+def ensino_chat_script():
+    return FileResponse(BASE_DIR / "web" / "ensino-chat.js", media_type="text/javascript", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/treinamento", include_in_schema=False)
