@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -61,6 +61,10 @@ class Conversa(Base):
         cascade="all, delete-orphan",
         order_by="MensagemAtendimento.id",
     )
+    resultados: Mapped[list[ResultadoAtendimento]] = relationship(
+        back_populates="conversa",
+        cascade="all, delete-orphan",
+    )
 
 
 class MensagemAtendimento(Base):
@@ -103,3 +107,34 @@ class Duvida(Base):
     respondida_em: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class ResultadoAtendimento(Base):
+    """Resultado comercial confirmado de uma conversa.
+
+    tipo: contratacao | renovacao
+    status: confirmado
+
+    A intencao de compra, pergunta de preco ou interesse nao cria registro.
+    O registro e criado manualmente pelo atendente ou por integracao autorizada.
+    """
+
+    __tablename__ = "resultados_atendimento"
+    __table_args__ = (
+        UniqueConstraint("conversa_id", "tipo", name="uq_resultado_conversa_tipo"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversa_id: Mapped[int | None] = mapped_column(
+        ForeignKey("conversas.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    contato: Mapped[str] = mapped_column(String(80), index=True)
+    tipo: Mapped[str] = mapped_column(String(20), index=True)
+    status: Mapped[str] = mapped_column(String(20), default="confirmado", index=True)
+    origem: Mapped[str] = mapped_column(String(20), default="manual")
+    observacao: Mapped[str | None] = mapped_column(Text, nullable=True)
+    criado_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=agora, index=True
+    )
+
+    conversa: Mapped[Conversa | None] = relationship(back_populates="resultados")

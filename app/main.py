@@ -77,3 +77,8 @@ def painel_antigo():
 @app.get("/revisao-suporte.js", include_in_schema=False)
 def revisao_suporte_script():
     return FileResponse(BASE_DIR / "web" / "revisao-suporte.js", media_type="text/javascript", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/indicadores", include_in_schema=False)
+def indicadores_visual():
+    return FileResponse(BASE_DIR / "web" / "indicadores.html", headers={"Cache-Control": "no-store"})
