@@ -1438,5 +1438,52 @@
     abrirLogin();
   }
 </script>
+<style id="connecttv-layout-v1">
+.ctv-tools{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:10px!important;width:100%;box-sizing:border-box}
+.ctv-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ctv-nav{padding-right:12px;border-right:1px solid #ffffff22}
+.ctv-status{flex:1;min-width:160px}
+.ctv-tools a,.ctv-tools button,.ctv-tools summary{font:inherit;font-size:13px;box-sizing:border-box;min-height:38px;border-radius:10px;padding:9px 13px;text-decoration:none;color:#eef0ff;border:1px solid #ffffff26;background:#ffffff09;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.ctv-tools a:hover,.ctv-tools button:hover,.ctv-tools summary:hover{background:#ffffff18}
+.ctv-tools a[aria-current="page"]{background:#7657dc;border-color:#987dff}
+.ctv-settings{position:relative}
+.ctv-settings summary{list-style:none}
+.ctv-settings summary::-webkit-details-marker{display:none}
+.ctv-settings[open]>.ctv-settings-content{position:absolute;right:0;top:calc(100% + 8px);z-index:200;background:#211b43;border:1px solid #ffffff30;border-radius:12px;padding:10px;box-shadow:0 14px 35px #0008;min-width:240px;display:flex;flex-direction:column;gap:8px}
+.ctv-settings-content>*{width:100%;justify-content:flex-start!important;margin:0!important}
+@media(max-width:760px){.ctv-nav{width:100%;padding-right:0;padding-bottom:8px;border-right:0;border-bottom:1px solid #ffffff22}.ctv-status{width:100%;flex:auto}.ctv-settings[open]>.ctv-settings-content{right:0;min-width:220px}}
+</style>
+<script id="connecttv-layout-script-v1">
+(function(){
+function setup(){
+ const bar=document.querySelector('header .acoes, .topo .acoes');
+ if(!bar){console.warn('ConnectTV: cabecalho .acoes nao encontrado.');return;}
+ bar.classList.add('ctv-tools');
+ const nav=document.createElement('nav');nav.className='ctv-group ctv-nav';nav.setAttribute('aria-label','Navegação principal');
+ const status=document.createElement('div');status.className='ctv-group ctv-status';
+ const actions=document.createElement('div');actions.className='ctv-group ctv-actions';
+ const settings=document.createElement('details');settings.className='ctv-settings';
+ const summary=document.createElement('summary');summary.textContent='Configurações';
+ const content=document.createElement('div');content.className='ctv-settings-content';settings.append(summary,content);
+ const original=Array.from(bar.children);
+ for(const [href,label] of [['/painel','Painel de clientes'],['/atendimento','Atendimento IA'],['/indicadores','Indicadores']]){
+  let link=original.find(e=>e.tagName==='A'&&(()=>{try{return new URL(e.href,location.href).pathname===href}catch(_){return false}})());
+  if(!link){link=document.createElement('a');link.href=href;link.textContent=label;}
+  if(location.pathname===href)link.setAttribute('aria-current','page');
+  nav.append(link);
+ }
+ for(const el of original){
+  if(nav.contains(el))continue;
+  const t=(el.textContent||'').trim().toLowerCase();
+  if(/ensinar|segmentos|base e d[uú]vidas|^api$|^sair$/.test(t))content.append(el);
+  else if(/ia ativa|link do app|ia inativa|ia desativada/.test(t))status.append(el);
+  else actions.append(el);
+ }
+ bar.append(nav,status,actions,settings);
+ if(!content.children.length)settings.hidden=true;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
+})();
+</script>
 </body>
 </html>

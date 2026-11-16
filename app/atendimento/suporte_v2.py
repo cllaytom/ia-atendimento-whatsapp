@@ -109,16 +109,19 @@ def inicializar():
     def transferir(db,conversa,motivo,aviso=None):
         return original_transfer(db,conversa,motivo,aviso="" if aviso=="" else AVISO)
     motor.transferir=transferir
-    original_msg=motor._msg
-    def mensagem(db,conversa,autor,texto,*args,**kwargs):
-        return original_msg(db,conversa,autor,limpar(texto) if autor=="ia" else texto,*args,**kwargs)
-    motor._msg=mensagem
-    original_query=ia._consultar
-    def consultar(payload):
-        start=time.perf_counter()
-        try: return original_query(payload)
-        finally: tempo_ia.set(tempo_ia.get()+time.perf_counter()-start)
-    ia._consultar=consultar
+    original_query = ia._consultar
+
+    @wraps(original_query)
+    def consultar(*args, **kwargs):
+        start = time.perf_counter()
+        try:
+            return original_query(*args, **kwargs)
+        finally:
+            tempo_ia.set(
+                tempo_ia.get() + time.perf_counter() - start
+            )
+
+    ia._consultar = consultar
     original_process=motor.processar_mensagem_cliente
     @wraps(original_process)
     def processar(*args,**kwargs):

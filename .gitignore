@@ -4,3 +4,19 @@ __pycache__/
 .pytest_cache/
 dados/*.db
 dados/*.db-journal
+
+# Dados privados locais
+/.local-auth/
+/backups-login/
+/backups-layout/
+/painel-importacao/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
