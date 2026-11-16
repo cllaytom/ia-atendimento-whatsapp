@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from . import config
 from .texto import extrair_plano_iptv, tem
@@ -278,7 +278,7 @@ def faq_teste() -> str:
         f"O teste grátis é de *{INTERNET_TRIAL_HORAS} horas*, para a internet ilimitada "
         "+ VPN.\n\n"
         "Para liberar, preciso confirmar se seu chip é *TIM* ou *Vivo* e se você fez "
-        "recarga nos últimos 3 meses. O serviço é somente para *Android*."
+        "recarga nos últimos 3 meses. O serviço é somente para *Android*.\n\n✅ Para a internet funcionar, seu celular precisa estar com sinal 4G, 5G ou LTE.\n❌ Em 3G, H+, H, G, E ou sem sinal, a conexão pode não funcionar ou ficar instável."
     )
 
 
@@ -346,6 +346,34 @@ def explicacao_geral() -> str:
 
 def buscar_faq(texto: str) -> str | None:
     """Respostas deterministas para as duvidas mais comuns."""
+    # Comparacoes especificas devem vir antes das FAQs por palavra-chave.
+    compara_operadora_vpn = (
+        tem(texto, "vpn")
+        and tem(texto, "operadora", "chip", "tim", "vivo")
+        and tem(
+            texto,
+            "diferenca",
+            "diferencas",
+            "compare",
+            "comparar",
+            "comparacao",
+            "relacao",
+            "versus",
+            "vs",
+        )
+    )
+
+    if compara_operadora_vpn:
+        return (
+            "A operadora do chip, como TIM ou Vivo, fornece o sinal "
+            "e a conexão móvel do celular. A nossa VPN funciona por "
+            "cima dessa conexão, ligando o aplicativo aos servidores "
+            "do serviço.\n\n"
+            "Por isso, a VPN não substitui o sinal da operadora. "
+            "Quando há dificuldade de conexão, verificamos tanto "
+            "a rede do chip quanto o aplicativo, as configurações "
+            "e o servidor utilizado."
+        )
     if tem(texto, "iphone", "ios", "apple"):
         return sem_iphone()
 
@@ -424,3 +452,4 @@ def buscar_faq(texto: str) -> str | None:
             return faq_iptv()
         return explicacao_geral()
     return None
+

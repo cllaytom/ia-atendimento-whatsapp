@@ -1,0 +1,273 @@
+{
+  "_instrucoes": "Base de conhecimento do atendimento. Somente assuntos do produto vendido (internet ilimitada + VPN e IPTV). Cada item tem pergunta, resposta e, opcionalmente, termos que devem aparecer na mensagem do cliente.",
+  "entradas": [
+    {
+      "pergunta": "Vocês têm internet ilimitada?",
+      "resposta": "Sim. Temos *internet ilimitada + VPN* para celular *Android*, com chip *TIM* ou *Vivo*.\n\nO teste grátis é de *4 horas*. Para começar, me diz: seu chip é TIM ou Vivo?",
+      "termos": [
+        "internet ilimitada",
+        "tem internet"
+      ]
+    },
+    {
+      "pergunta": "Vocês trabalham com o quê?",
+      "resposta": "Trabalhamos com:\n\n1️⃣ *Internet ilimitada + VPN* para Android.\n2️⃣ *IPTV* para Smart TV ou TV Box.\n\nQual serviço você quer conhecer?",
+      "termos": [
+        "trabalham",
+        "fazem",
+        "serviços"
+      ]
+    },
+    {
+      "pergunta": "Vocês fazem o quê?",
+      "resposta": "Trabalhamos com:\n\n1️⃣ *Internet ilimitada + VPN* para Android.\n2️⃣ *IPTV* para Smart TV ou TV Box.\n\nQual serviço você quer conhecer?",
+      "termos": [
+        "fazem",
+        "trabalham"
+      ]
+    },
+    {
+      "pergunta": "Como eu uso a internet ilimitada?",
+      "resposta": "É simples: você instala o aplicativo no celular *Android*, escolhe a operadora e conecta usando o acesso que enviamos.\n\nPrecisa de chip *TIM* ou *Vivo* com recarga nos últimos 3 meses. Quer fazer o teste grátis de 4 horas?",
+      "termos": [
+        "como uso",
+        "como funciona",
+        "usar"
+      ]
+    },
+    {
+      "pergunta": "Preciso de ajuda",
+      "resposta": "Claro! Me diz o que você precisa: *internet*, *IPTV*, *pagamento*, *renovação* ou *suporte*?",
+      "termos": [
+        "preciso de ajuda",
+        "ajuda"
+      ]
+    },
+    {
+      "pergunta": "Cancele meu plano",
+      "resposta": "Entendi. Você quer cancelar o plano. Vou encaminhar seu pedido para um atendente confirmar e finalizar.\n\n[[TRANSFERIR]]",
+      "termos": [
+        "cancelar",
+        "cancele",
+        "cancelamento"
+      ]
+    },
+    {
+      "pergunta": "Quero cancelar",
+      "resposta": "Entendi. Você quer cancelar o plano. Vou encaminhar seu pedido para um atendente confirmar e finalizar.\n\n[[TRANSFERIR]]",
+      "termos": [
+        "cancelar",
+        "cancelamento"
+      ]
+    },
+    {
+      "pergunta": "Quais sao os planos e os precos?",
+      "resposta": "Temos estas opções:\n\n1️⃣ *Internet ilimitada + VPN* — R$ 15 no 1º mês (depois R$ 20), com teste grátis de 4h. Somente Android.\n2️⃣ *IPTV Completo* — R$ 30 no 1º mês (depois R$ 35), com todos os streamers.\n3️⃣ *IPTV Básico* — R$ 20 no 1º mês (depois R$ 30).\n\nQual você quer saber mais?",
+      "termos": [
+        "planos",
+        "precos"
+      ]
+    },
+    {
+      "pergunta": "Como funciona o teste gratis?",
+      "resposta": "O teste grátis é de *4 horas* e vale para a *internet ilimitada + VPN*.\n\nPara liberar, preciso confirmar se seu chip é *TIM* ou *Vivo* e se você fez *recarga nos últimos 3 meses*. O serviço é somente para celular *Android*.",
+      "termos": [
+        "teste",
+        "gratis"
+      ]
+    },
+    {
+      "pergunta": "O aplicativo funciona no iPhone?",
+      "resposta": "Infelizmente não. O serviço é somente para *Android* — não temos opção para iPhone. Se você tiver um celular Android, posso continuar o atendimento.",
+      "termos": [
+        "iphone",
+        "ios"
+      ]
+    },
+    {
+      "pergunta": "Quais operadoras sao aceitas?",
+      "resposta": "Trabalhamos com chips *TIM* e *Vivo*. O chip precisa ter recebido uma recarga nos últimos 3 meses para estar ativo.",
+      "termos": [
+        "operadora",
+        "aceita"
+      ]
+    },
+    {
+      "pergunta": "Precisa de recarga no chip?",
+      "resposta": "Sim. A recarga nos últimos 3 meses é necessária para manter o chip ativo. Sem ela, o chip pode estar inativo e a ativação não funciona.",
+      "termos": [
+        "recarga",
+        "chip"
+      ]
+    },
+    {
+      "pergunta": "Qual a diferenca entre IPTV Completo e Basico?",
+      "resposta": "O *IPTV Completo* inclui todos os streamers e custa R$ 30 no 1º mês (depois R$ 35).\nO *IPTV Básico* é o plano de entrada e custa R$ 20 no 1º mês (depois R$ 30).",
+      "termos": [
+        "diferenca",
+        "completo",
+        "basico"
+      ]
+    },
+    {
+      "pergunta": "O IPTV funciona em TV Box?",
+      "resposta": "Sim! O IPTV funciona em *Smart TV* ou em *TV Box* compatível. Me informe o *modelo do seu TV Box* que eu indico o aplicativo correto para instalar.",
+      "termos": [
+        "tv box"
+      ]
+    },
+    {
+      "pergunta": "Como funciona o IPTV?",
+      "resposta": "O IPTV funciona em *Smart TV* ou *TV Box*. Eu pergunto a marca da TV, se ela é Smart e, se você usa TV Box, o modelo, para indicar o aplicativo correto.\n\nTemos o *Completo* (todos os streamers) por R$ 30 no 1º mês e o *Básico* por R$ 20 no 1º mês.",
+      "termos": [
+        "iptv",
+        "funciona"
+      ]
+    },
+    {
+      "pergunta": "A VPN e segura?",
+      "resposta": "Sim. A conexão usa tecnologia *VPN* com um túnel criptografado entre o seu celular e nossos servidores. Isso ajuda a proteger a transmissão dos seus dados enquanto você navega.\n\nO aplicativo é baixado pela *Play Store*, somente em *Android*. E você pode testar *4 horas grátis* antes de contratar.",
+      "termos": [
+        "vpn",
+        "segura"
+      ]
+    },
+    {
+      "pergunta": "E seguro contratar?",
+      "resposta": "Pode ficar tranquilo. O serviço usa *VPN com conexão criptografada*, o que ajuda a proteger os seus dados. O aplicativo é disponibilizado pela *Play Store* (somente Android).\n\nSe quiser, comece pelo *teste grátis de 4h* para conhecer antes de pagar qualquer coisa.",
+      "termos": [
+        "seguro"
+      ]
+    },
+    {
+      "pergunta": "O servico e confiavel?",
+      "resposta": "Sim. Trabalhamos com atendimento pelo WhatsApp, aplicativo na *Play Store* e *teste grátis de 4h* para você conhecer antes de contratar. A conexão usa VPN criptografada para proteger seus dados.",
+      "termos": [
+        "confiavel"
+      ]
+    },
+    {
+      "pergunta": "Posso confiar na ConnectTV?",
+      "resposta": "Pode confiar. A ConnectTV trabalha com aplicativo na *Play Store*, atendimento pelo WhatsApp e *teste grátis de 4h* para você experimentar antes de contratar. A conexão é feita por VPN criptografada.",
+      "termos": [
+        "confiar"
+      ]
+    },
+    {
+      "pergunta": "E golpe?",
+      "resposta": "Não é golpe. Nosso aplicativo fica disponível na *Play Store* e você pode fazer o *teste grátis de 4h* antes de pagar. Se ficar com dúvida, posso te explicar cada etapa antes de você decidir.",
+      "termos": [
+        "golpe"
+      ]
+    },
+    {
+      "pergunta": "O aplicativo pega virus?",
+      "resposta": "Não. O aplicativo é baixado direto da *Play Store*, que verifica os apps antes de publicar. Ele é usado para conectar a VPN do serviço, com a conexão criptografada. E você pode testar *4h grátis* antes de contratar.",
+      "termos": [
+        "virus"
+      ]
+    },
+    {
+      "pergunta": "O que e a VPN?",
+      "resposta": "A VPN protege sua conexão e ajuda a manter sua privacidade enquanto você usa a internet. Ela já está incluída no plano de internet ilimitada + VPN.",
+      "termos": [
+        "vpn"
+      ]
+    },
+    {
+      "pergunta": "como funciona",
+      "resposta": "A *internet ilimitada + VPN* funciona no celular *Android*, com chip *TIM* ou *Vivo* e recarga nos últimos 3 meses.\n\nVocê instala o aplicativo, escolhe a operadora e conecta com o acesso que enviamos. O teste grátis é de *4 horas*.\n\nQuer testar?",
+      "termos": []
+    },
+    {
+      "pergunta": "oque e internet ilimitada?",
+      "resposta": "É um serviço de internet para celular *Android* que usa conexão VPN. Ele exige chip *TIM* ou *Vivo* com recarga nos últimos 3 meses.\n\nO teste grátis é de *4 horas*. Quer saber como começar?",
+      "termos": [
+        "internet ilimitada",
+        "oque e"
+      ]
+    },
+    {
+      "pergunta": "Quais os valores dos planos de internet?",
+      "resposta": "Temos:\n\n*Internet ilimitada + VPN*\n• R$ 15 no 1º mês e R$ 20 a partir do 2º mês\n• Teste grátis de 4 horas\n• Somente Android, com chip TIM ou Vivo\n\n*IPTV Completo* — todos os streamers\n• R$ 30 no 1º mês e R$ 35 depois\n\n*IPTV Básico*\n• R$ 20 no 1º mês e R$ 30 depois\n\nQual deles você quer testar?",
+      "termos": [
+        "valores",
+        "quanto custa",
+        "preco",
+        "preços",
+        "valor",
+        "pacotes"
+      ]
+    },
+    {
+      "pergunta": "Qual o valor do pacote mensal?",
+      "resposta": "O plano de *internet ilimitada + VPN* fica R$ 15 no 1º mês e R$ 20 a partir do 2º mês, com teste grátis de 4 horas.\n\nSó funciona em celular *Android* com chip *TIM* ou *Vivo*. Seu chip é TIM ou Vivo?",
+      "termos": [
+        "pacote mensal",
+        "plano mensal",
+        "mensalidade",
+        "quanto fica"
+      ]
+    },
+    {
+      "pergunta": "Preciso mandar foto da loja de aplicativos?",
+      "resposta": "Sim, para eu indicar o aplicativo certo do IPTV: no celular ou na TV, abra a loja de aplicativos (Play Store) e me envie uma *foto da tela mostrando os aplicativos instalados*.\n\nSe não conseguir enviar, digite *pular* que eu sigo por aqui.",
+      "termos": [
+        "foto da loja",
+        "print da loja",
+        "loja de aplicativos",
+        "manda foto"
+      ]
+    },
+    {
+      "pergunta": "Como envio o comprovante do pagamento?",
+      "resposta": "Depois do pagamento é só me enviar o *comprovante do PIX* por aqui, junto com o login e a senha do aplicativo. Assim que chegar, a ativação é feita.",
+      "termos": [
+        "comprovante",
+        "envio o pix",
+        "paguei",
+        "pagamento"
+      ]
+    },
+    {
+      "pergunta": "Como pagar?",
+      "resposta": "O pagamento é por *PIX*. Depois de confirmar o plano, eu envio a chave PIX e você me manda o comprovante por aqui para ativar.",
+      "termos": [
+        "pagar",
+        "pix",
+        "forma de pagamento",
+        "chave pix"
+      ]
+    },
+    {
+      "pergunta": "Preciso informar e-mail e senha?",
+      "resposta": "Sim, para ativar o aplicativo eu peço o *e-mail e a senha* usados no app. Eles servem só para liberar o seu acesso.",
+      "termos": [
+        "e-mail e senha",
+        "email e senha",
+        "login",
+        "senha"
+      ]
+    },
+    {
+      "pergunta": "Minha TV é Smart, e agora?",
+      "resposta": "Perfeito! Em Smart TV o IPTV funciona direto pelo aplicativo. Me diz a *marca* da TV (Samsung, LG, TCL...) e eu indico o aplicativo certo.",
+      "termos": [
+        "smart",
+        "smart tv",
+        "minha tv",
+        "televisao"
+      ]
+    },
+    {
+      "pergunta": "Não estou conseguindo conectar a internet",
+      "resposta": "Vamos verificar juntos: o chip é *TIM* ou *Vivo*? Ele teve recarga nos últimos 3 meses? Se estiver tudo certo, eu encaminho para o suporte técnico resolver.",
+      "termos": [
+        "nao conecta",
+        "nao esta conectando",
+        "sem internet",
+        "nao funciona a internet"
+      ]
+    }
+  ]
+}

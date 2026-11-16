@@ -68,64 +68,49 @@ def _promessas_permitidas(texto: str) -> bool:
     return True
 
 
-def _consultar(payload: dict) -> dict | None:
-    # Duas tentativas no maximo; nenhuma chave ou corpo remoto vai para o log.
+def _consultar(base_url: str, api_key: str, modelo: str, payload: dict) -> tuple[dict | None, int | None]:
     timeout = max(0.1, min(config.IA_TIMEOUT, 8.0))
+    cabecalhos = {"Content-Type": "application/json"}
+    if api_key:
+        cabecalhos["Authorization"] = f"Bearer {api_key}"
+
     for tentativa in range(2):
         try:
             resposta = httpx.post(
-                f"{config.IA_BASE_URL}/chat/completions",
-                headers={"Authorization": f"Bearer {config.IA_API_KEY}", "Content-Type": "application/json"},
+                f"{base_url}/chat/completions",
+                headers=cabecalhos,
                 json=payload,
                 timeout=timeout,
             )
-        except httpx.TimeoutException:
-            logger.warning("IA: tempo de espera excedido; usando respostas roteirizadas.")
-            return None
-        except httpx.RequestError:
-            logger.warning("IA: falha de conexao; usando respostas roteirizadas.")
-            return None
+        except (httpx.TimeoutException, httpx.RequestError):
+            return None, None
 
         status = resposta.status_code
         if status in (500, 502, 503, 504) and tentativa == 0:
-            logger.warning("IA: HTTP %s temporario; nova tentativa em 0,5 segundo.", status)
             time.sleep(0.5)
             continue
         if status >= 400:
-            motivo = {
-                400: "requisicao rejeitada; confira modelo e parametros",
-                401: "autenticacao recusada; confira IA_API_KEY",
-                403: "acesso negado; confira chave e permissoes",
-                404: "modelo ou endpoint nao encontrado; confira IA_MODELO e IA_BASE_URL",
-                429: "limite de uso ou cota atingido",
-                503: "servico do provedor indisponivel apos nova tentativa",
-            }.get(status, "falha retornada pelo provedor")
-            logger.warning("IA: HTTP %s (%s); usando respostas roteirizadas.", status, motivo)
-            return None
+            return None, status
         try:
             resultado = resposta.json()
         except ValueError:
-            logger.warning("IA: resposta JSON invalida.")
-            return None
+            return None, status
         if not isinstance(resultado, dict):
-            logger.warning("IA: formato de resposta inesperado.")
-            return None
-        logger.info("IA: consulta concluida com sucesso (HTTP %s).", status)
-        return resultado
-    return None
+            return None, status
+        return resultado, status
+    return None, None
 
 
-def responder(historico: list[dict], etapa: str, dados: dict) -> RespostaIA | None:
-    if not disponivel():
-        logger.warning("IA desativada: preencha IA_BASE_URL e IA_API_KEY no .env e reinicie.")
-        return None
+def _mensagens(historico: list[dict], etapa: str, dados: dict) -> list[dict]:
     pergunta_atual = ""
     for item in reversed(historico):
         if item.get("autor") == "cliente" and (item.get("texto") or "").strip():
             pergunta_atual = item["texto"]
             break
+
     base_conhecimento = conhecimento.para_prompt(pergunta_atual)
     mensagens = [{"role": "system", "content": sistema(etapa, dados, base_conhecimento)}]
+
     for item in historico[-16:]:
         autor = item.get("autor")
         texto = (item.get("texto") or "").strip()
@@ -135,25 +120,49 @@ def responder(historico: list[dict], etapa: str, dados: dict) -> RespostaIA | No
             mensagens.append({"role": "user", "content": texto})
         elif autor in ("ia", "humano"):
             mensagens.append({"role": "assistant", "content": texto})
+    return mensagens
+
+
+def responder(historico: list[dict], etapa: str, dados: dict) -> RespostaIA | None:
+    if not disponivel():
+        logger.warning("IA desativada: configure Groq ou Ollama no .env e reinicie.")
+        return None
+
+    mensagens = _mensagens(historico, etapa, dados)
     if len(mensagens) == 1:
         return None
+
     payload = {"model": config.IA_MODELO, "messages": mensagens, "temperature": 0.25, "max_tokens": 400}
-    try:
-        dados_resposta = _consultar(payload)
-        if dados_resposta is None:
-            return None
-        texto = _extrair_conteudo(dados_resposta).strip()
-    except Exception as erro:
-        logger.error("IA: falha inesperada (%s); usando respostas roteirizadas.", type(erro).__name__)
+    texto = ""
+    transferir = False
+
+    if config.IA_BASE_URL and config.IA_API_KEY:
+        resposta, status = _consultar(config.IA_BASE_URL, config.IA_API_KEY, config.IA_MODELO, payload)
+        if resposta:
+            texto = _extrair_conteudo(resposta).strip()
+            transferir = MARCADOR_TRANSFERIR in texto
+            texto = texto.replace(MARCADOR_TRANSFERIR, "").strip()
+        elif status == 429:
+            logger.warning("Groq atingiu limite; tentando Ollama.")
+
+    if not texto and config.IA_FALLBACK_BASE_URL:
+        payload["model"] = config.IA_FALLBACK_MODELO
+        resposta, status = _consultar(
+            config.IA_FALLBACK_BASE_URL,
+            config.IA_FALLBACK_API_KEY,
+            config.IA_FALLBACK_MODELO,
+            payload,
+        )
+        if resposta:
+            texto = _extrair_conteudo(resposta).strip()
+            transferir = MARCADOR_TRANSFERIR in texto
+            texto = texto.replace(MARCADOR_TRANSFERIR, "").strip()
+
+    if not texto and not transferir:
         return None
-    if not texto:
-        logger.warning("IA: provedor retornou resposta vazia.")
-        return None
-    transferir = MARCADOR_TRANSFERIR in texto
-    texto = texto.replace(MARCADOR_TRANSFERIR, "").strip()
+
     if texto and not (_precos_permitidos(texto) and _promessas_permitidas(texto)):
         logger.warning("Resposta da IA bloqueada por conflitar com o catalogo.")
         return None
-    if not texto and not transferir:
-        return None
+
     return RespostaIA(texto=texto, transferir=transferir, motivo="ia_identificou")

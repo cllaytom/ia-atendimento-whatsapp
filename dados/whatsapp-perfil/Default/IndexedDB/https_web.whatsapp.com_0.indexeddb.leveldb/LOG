@@ -1,0 +1,30 @@
+2026/11/15-22:00:38.495 7300 Reusing MANIFEST D:\planilhas\ia atendimento\dados\whatsapp-perfil\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/11/15-22:00:38.498 7300 Recovering log #673
+2026/11/15-22:00:38.559 7300 Reusing old log D:\planilhas\ia atendimento\dados\whatsapp-perfil\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000673.log 
+2026/11/15-22:00:39.768 31b0 Level-0 table #682: started
+2026/11/15-22:00:40.009 31b0 Level-0 table #682: 897805 bytes OK
+2026/11/15-22:00:40.182 31b0 Delete type=0 #673
+2026/11/15-22:00:40.183 7300 Manual compaction at level-0 from '\x00\xa2\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xa3\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/11/15-22:00:40.190 3f54 Level-0 table #684: started
+2026/11/15-22:00:40.341 3f54 Level-0 table #684: 21798 bytes OK
+2026/11/15-22:00:40.496 3f54 Delete type=0 #681
+2026/11/15-22:00:40.497 31b0 Manual compaction at level-0 from '\x00\xa3\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\xa4\x00\x00\x00' @ 0 : 0; will stop at '\x00\xa3\x00\x00\x05' @ 1173074 : 0
+2026/11/15-22:00:40.497 31b0 Compacting 1@0 + 1@1 files
+2026/11/15-22:00:40.679 31b0 Generated table #685@0: 6169 keys, 384266 bytes
+2026/11/15-22:00:40.679 31b0 Compacted 1@0 + 1@1 files => 384266 bytes
+2026/11/15-22:00:41.098 31b0 compacted to: files[ 0 1 4 0 0 0 0 ]
+2026/11/15-22:00:41.099 31b0 Delete type=2 #684
+2026/11/15-22:00:41.100 7300 Manual compaction at level-0 from '\x00\xa3\x00\x00\x05' @ 1173074 : 0 .. '\x00\xa4\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/11/15-22:00:41.180 7300 Compacting 1@1 + 4@2 files
+2026/11/15-22:00:41.852 7300 Generated table #686@1: 68094 keys, 2440877 bytes
+2026/11/15-22:00:42.747 7300 Generated table #687@1: 33120 keys, 2615830 bytes
+2026/11/15-22:00:43.277 7300 Generated table #688@1: 27697 keys, 2190900 bytes
+2026/11/15-22:00:43.497 7300 Generated table #689@1: 16224 keys, 958720 bytes
+2026/11/15-22:00:43.497 7300 Compacted 1@1 + 4@2 files => 8206327 bytes
+2026/11/15-22:00:43.661 7300 compacted to: files[ 0 0 4 0 0 0 0 ]
+2026/11/15-22:00:43.662 7300 Delete type=2 #676
+2026/11/15-22:00:43.662 7300 Delete type=2 #677
+2026/11/15-22:00:43.662 7300 Delete type=2 #678
+2026/11/15-22:00:43.663 7300 Delete type=2 #679
+2026/11/15-22:00:43.663 7300 Delete type=2 #682
+2026/11/15-22:00:43.663 7300 Delete type=2 #685
