@@ -78,14 +78,6 @@
     }
   }
 
-  function observarPlanos() {
-    const select = document.getElementById('novoPlano');
-    if (!select) return;
-    aplicarPlanos();
-    const observador = new MutationObserver(() => aplicarPlanos());
-    observador.observe(select, { childList: true });
-  }
-
   function normalizarValor(texto) {
     if (!texto) return '';
     let limpo = String(texto).trim().replace(/[^0-9.,-]/g, '');
@@ -272,7 +264,7 @@
       listarProdutos();
     }
 
-    observarPlanos();
+    aplicarPlanos();
     observarValor();
   }
 
