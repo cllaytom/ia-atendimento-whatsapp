@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.clientes.database import Base, get_db
 from app.clientes.models import Produto
@@ -12,7 +13,11 @@ from app.clientes.security import verificar_api_key
 
 
 def _app():
-    engine = create_engine('sqlite:///:memory:', connect_args={'check_same_thread': False})
+    engine = create_engine(
+        'sqlite://',
+        connect_args={'check_same_thread': False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
     fabrica = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
