@@ -4,31 +4,15 @@
   const API = '';
 
   function chave() {
-    let valor = localStorage.getItem('painel_extras_api_key');
-    if (!valor) {
-      for (const nome of ['api_key', 'ctv_api_key', 'x-api-key']) {
-        const candidato = localStorage.getItem(nome);
-        if (candidato) {
-          valor = candidato;
-          break;
-        }
-      }
-    }
-    if (!valor) {
-      valor = prompt('Informe a X-API-Key para produtos e recebimentos:');
-      if (valor) localStorage.setItem('painel_extras_api_key', valor);
-    }
-    return valor;
+    return localStorage.getItem('assinaturas.apiKey') || 'sessao-local';
   }
 
   async function api(caminho, opcoes = {}) {
-    const chaveApi = chave();
-    if (!chaveApi) throw new Error('Chave da API nao informada.');
     const resposta = await fetch(API + caminho, {
       ...opcoes,
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': chaveApi,
+        'X-API-Key': chave(),
         ...(opcoes.headers || {}),
       },
     });
