@@ -2,6 +2,7 @@
   'use strict';
 
   const API = '';
+  const PLANOS_ATIVOS = ['MENSAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL'];
 
   function chave() {
     return localStorage.getItem('assinaturas.apiKey') || 'sessao-local';
@@ -61,25 +62,52 @@
     return `<label style="display:block;margin:12px 0 6px;color:#9aa0c7;font-size:12px">${rotulo}</label>${input}`;
   }
 
-  async function filtrarPlanosAtivos() {
+  function aplicarPlanos() {
     const select = document.getElementById('novoPlano');
     if (!select) return;
-    try {
-      const planos = await api('/planos?apenas_ativos=true');
-      const valorAtual = select.value;
-      select.innerHTML = '<option value="">— sem plano —</option>';
-      planos.forEach((plano) => {
-        const opcao = document.createElement('option');
-        opcao.value = plano.nome;
-        opcao.textContent = plano.nome;
-        select.appendChild(opcao);
-      });
-      if (valorAtual && planos.some((plano) => plano.nome === valorAtual)) {
-        select.value = valorAtual;
-      }
-    } catch (_) {
-      // nao interrompe o painel se a consulta falhar
+    const valorAtual = select.value;
+    select.innerHTML = '<option value="">— sem plano —</option>';
+    PLANOS_ATIVOS.forEach((nome) => {
+      const opcao = document.createElement('option');
+      opcao.value = nome;
+      opcao.textContent = nome;
+      select.appendChild(opcao);
+    });
+    if (PLANOS_ATIVOS.includes(valorAtual)) {
+      select.value = valorAtual;
     }
+  }
+
+  function observarPlanos() {
+    const select = document.getElementById('novoPlano');
+    if (!select) return;
+    aplicarPlanos();
+    const observador = new MutationObserver(() => aplicarPlanos());
+    observador.observe(select, { childList: true });
+  }
+
+  function normalizarValor(texto) {
+    if (!texto) return '';
+    let limpo = String(texto).trim().replace(/[^0-9.,-]/g, '');
+    if (limpo.includes(',') && limpo.includes('.')) {
+      limpo = limpo.replace(/\./g, '').replace(',', '.');
+    } else if (limpo.includes(',')) {
+      limpo = limpo.replace(',', '.');
+    }
+    const numero = Number(limpo);
+    if (!isFinite(numero) || numero < 0) return '';
+    return numero.toFixed(2).replace('.', ',');
+  }
+
+  function observarValor() {
+    const campoValor = document.getElementById('novoValor');
+    if (!campoValor) return;
+    const formatar = () => {
+      const formatado = normalizarValor(campoValor.value);
+      if (formatado) campoValor.value = formatado;
+    };
+    campoValor.addEventListener('blur', formatar);
+    campoValor.addEventListener('change', formatar);
   }
 
   function abrirRecebimento() {
@@ -244,7 +272,8 @@
       listarProdutos();
     }
 
-    filtrarPlanosAtivos();
+    observarPlanos();
+    observarValor();
   }
 
   if (document.readyState === 'loading') {
