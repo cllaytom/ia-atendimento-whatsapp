@@ -82,6 +82,18 @@ def avancar(texto, anterior=None, servico="", historico=()):
                 if possui(phrase, terms): done.add(step)
     network = rede_em(t)
     if network: state["rede"] = network
+    # Saidas educadas e pedidos para parar nao podem gerar repeticao.
+    if possui(t, ("sair", "obrigado", "obrigada", "valeu", "tchau", "depois eu tento", "depois tento", "mais tarde", "cancelar", "parar", "nao quero mais")):
+        state.update(ativo=False, pendente=None)
+        return out("Tudo bem. Quando quiser retomar o teste, me avise o resultado.")
+    if possui(t, ("sem internet para baixar", "nao consigo baixar", "nao tenho internet para baixar", "sem internet pra baixar")):
+        return out(AVISO, "transferir")
+    if pending == "dados" and network:
+        done.add("dados")
+        state["pendente"] = None
+    if pending == "dados" and possui(t, ("normal", "boa", "funciona", "esta ok", "ta ok", "ok", "funcionando")) and not possui(t, ("nao", "lenta", "lento", "travando")):
+        state["pendente"] = "confirmar_navegacao"
+        return out("Ótimo. Consegue abrir um site com o Wi-Fi desligado e os dados móveis ligados?")
     if possui(t, (
         "voltou a funcionar",
         "agora funciona",
@@ -107,6 +119,11 @@ def avancar(texto, anterior=None, servico="", historico=()):
         "isso",
         "consegui",
         "normal",
+        "boa",
+        "funciona",
+        "esta ok",
+        "ta ok",
+        "ok",
         "deu certo",
         "funcionou",
         "esta funcionando",
@@ -117,10 +134,6 @@ def avancar(texto, anterior=None, servico="", historico=()):
         "nao funcionou",
         "nao deu certo",
     )):
-        state.update(ativo=False, pendente=None)
-        return out("Ótimo, navegação confirmada pelos dados móveis. Se precisar, pode nos chamar novamente.")
-        return out("Consegue navegar com o Wi-Fi desligado e os dados móveis ligados? Quero confirmar o teste pela rede do chip.")
-    if pending == "confirmar_navegacao" and possui(t, ("sim", "isso", "consegui", "normal")) and not possui(t, ("nao", "wifi ligado")):
         state.update(ativo=False, pendente=None)
         return out("Ótimo, navegação confirmada pelos dados móveis. Se precisar, pode nos chamar novamente.")
     if possui(t, ("conectou", "conectado")) and not possui(t, ("nao", "sem internet", "nao carrega", "mas")):
