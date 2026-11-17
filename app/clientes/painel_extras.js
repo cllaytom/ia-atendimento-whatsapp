@@ -61,6 +61,27 @@
     return `<label style="display:block;margin:12px 0 6px;color:#9aa0c7;font-size:12px">${rotulo}</label>${input}`;
   }
 
+  async function filtrarPlanosAtivos() {
+    const select = document.getElementById('novoPlano');
+    if (!select) return;
+    try {
+      const planos = await api('/planos?apenas_ativos=true');
+      const valorAtual = select.value;
+      select.innerHTML = '<option value="">— sem plano —</option>';
+      planos.forEach((plano) => {
+        const opcao = document.createElement('option');
+        opcao.value = plano.nome;
+        opcao.textContent = plano.nome;
+        select.appendChild(opcao);
+      });
+      if (valorAtual && planos.some((plano) => plano.nome === valorAtual)) {
+        select.value = valorAtual;
+      }
+    } catch (_) {
+      // nao interrompe o painel se a consulta falhar
+    }
+  }
+
   function abrirRecebimento() {
     const hoje = new Date().toISOString().slice(0, 10);
     const caixa = modal('Registrar recebimento', `
@@ -222,6 +243,8 @@
       secao.querySelector('#extraNovoProduto').onclick = abrirNovoProduto;
       listarProdutos();
     }
+
+    filtrarPlanosAtivos();
   }
 
   if (document.readyState === 'loading') {
