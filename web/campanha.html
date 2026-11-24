@@ -1,9 +1,9 @@
-ï»¿<!doctype html>
+?<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Campanha de reativaÃƒÂ§ÃƒÂ£o Ã¢â‚¬â€ ConnectTV</title>
+<title>Campanha de reativação — ConnectTV</title>
 <!--
   ============================================================================
   CAMPANHA DE REATIVACAO - menu novo, independente do atendimento IA.
@@ -156,7 +156,7 @@
   .toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.erro { border-color: rgba(255, 92, 122, .6); background: #3a1730; }
   html { scroll-behavior: smooth; }
-  /* ------------------------- modo simples / avanÃƒÂ§ado ------------------------ */
+  /* ------------------------- modo simples / avançado ------------------------ */
   .passos {
     display: grid; gap: 10px; margin-top: 12px;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -203,14 +203,14 @@
 
 <header class="topo">
   <div>
-    <h1><span class="ponto"></span><span id="titulo">Campanha de reativaÃƒÂ§ÃƒÂ£o</span></h1>
+    <h1><span class="ponto"></span><span id="titulo">Campanha de reativação</span></h1>
     <div class="sub" id="subtitulo">Carregando...</div>
   </div>
   <div class="acoes">
-    <button class="botao primario" id="btnAtivar" disabled title="DisponÃƒÂ­vel quando existir canal de envio">Ativar campanha</button>
+    <button class="botao primario" id="btnAtivar" disabled title="Disponível quando existir canal de envio">Ativar campanha</button>
     <button class="botao perigo" id="btnPausar" title="Desligar a campanha">Pausar</button>
     <a class="botao" href="/painel">Voltar ao painel</a>
-    <button id="btnMostrarTudo" class="alternar" title="Mostrar as funÃƒÂ§ÃƒÂµes avanÃƒÂ§adas">Mostrar tudo</button>
+    <button id="btnMostrarTudo" class="alternar" title="Mostrar as funções avançadas">Mostrar tudo</button>
     <button id="btnAtualizar">Atualizar</button>
     <button id="btnSair" title="Trocar a chave">Sair</button>
   </div>
@@ -222,17 +222,17 @@
   <section class="linha">
     <article class="card larga">
       <h2>Como usar (3 passos)</h2>
-      <div class="nota">Esta tela mostra sÃƒÂ³ o essencial. ParÃƒÂ¢metros, logs, opt-out e outras funÃƒÂ§ÃƒÂµes ficam em <b>Mostrar tudo</b>, no topo.</div>
+      <div class="nota">Esta tela mostra só o essencial. Parâmetros, logs, opt-out e outras funções ficam em <b>Mostrar tudo</b>, no topo.</div>
       <div class="passos">
         <div class="passo">
           <span class="num">1</span>
-          <b>Ligue o robÃƒÂ´</b>
-          <p>No cartÃƒÂ£o <b>RobÃƒÂ´ do WhatsApp</b>, clique em <b>Ligar robÃƒÂ´ (manual)</b>. Ele conecta e fica esperando Ã¢â‚¬â€ nada sai sozinho.</p>
+          <b>Ligue o robô</b>
+          <p>No cartão <b>Robô do WhatsApp</b>, clique em <b>Ligar robô (manual)</b>. Ele conecta e fica esperando — nada sai sozinho.</p>
         </div>
         <div class="passo">
           <span class="num">2</span>
           <b>Ative a campanha</b>
-          <p>No topo, <b>Ativar campanha</b> e digite <code>ENVIAR</code>. Ãƒâ€° isso que libera o envio pelo painel.</p>
+          <p>No topo, <b>Ativar campanha</b> e digite <code>ENVIAR</code>. É isso que libera o envio pelo painel.</p>
         </div>
         <div class="passo">
           <span class="num">3</span>
@@ -241,21 +241,21 @@
         </div>
       </div>
       <div class="atalhos">
-        <a class="botao" href="#secRobo">1 Ã‚Â· RobÃƒÂ´</a>
-        <a class="botao" href="#secFila">2 Ã‚Â· Fila</a>
-        <a class="botao" href="#secNumeros">3 Ã‚Â· Adicionar contatos</a>
+        <a class="botao" href="#secRobo">1 · Robô</a>
+        <a class="botao" href="#secFila">2 · Fila</a>
+        <a class="botao" href="#secNumeros">3 · Adicionar contatos</a>
       </div>
     </article>
   </section>
 
   <section class="linha avancado">
     <article class="card larga">
-      <h2>NÃƒÂºmeros da campanha <span class="selo">avanÃƒÂ§ado</span></h2>
-      <div class="nota">O <b>remetente</b> ÃƒÂ© quem dispara (fica fora dos alvos). O <b>nÃƒÂºmero de teste</b> ÃƒÂ© o destinatÃƒÂ¡rio autorizado das fases supervisionadas (tambÃƒÂ©m fica fora da fila normal). Os dois podem ser trocados a qualquer momento.</div>
+      <h2>Números da campanha <span class="selo">avançado</span></h2>
+      <div class="nota">O <b>remetente</b> é quem dispara (fica fora dos alvos). O <b>número de teste</b> é o destinatário autorizado das fases supervisionadas (também fica fora da fila normal). Os dois podem ser trocados a qualquer momento.</div>
       <div class="ferramentas">
-        <input type="text" id="numeroRemetente" placeholder="Remetente: DDD + nÃƒÂºmero" maxlength="20">
-        <input type="text" id="numeroTeste" placeholder="NÃƒÂºmero de teste (opcional)" maxlength="20">
-        <button class="botao primario" id="btnSalvarNumero">Salvar nÃƒÂºmeros</button>
+        <input type="text" id="numeroRemetente" placeholder="Remetente: DDD + número" maxlength="20">
+        <input type="text" id="numeroTeste" placeholder="Número de teste (opcional)" maxlength="20">
+        <button class="botao primario" id="btnSalvarNumero">Salvar números</button>
         <span class="contador" id="numeroRemetenteNota"></span>
       </div>
     </article>
@@ -263,23 +263,23 @@
 
   <section class="linha avancado">
     <article class="card larga">
-      <h2>ParÃƒÂ¢metros de envio <span class="selo">avanÃƒÂ§ado</span></h2>
-      <div class="nota">Valem a partir do prÃƒÂ³ximo envio, sem reiniciar o worker. <b>Cota diÃƒÂ¡ria 0</b> usa a rampa automÃƒÂ¡tica (10 Ã¢â€ â€™ 20 Ã¢â€ â€™ 30/dia); qualquer outro valor vira cota fixa. <b>Cooldown</b> ÃƒÂ© o tempo mÃƒÂ­nimo antes de repetir o mesmo contato. <b>Tentativas 1</b> = falha nÃƒÂ£o ÃƒÂ© repetida.</div>
+      <h2>Parâmetros de envio <span class="selo">avançado</span></h2>
+      <div class="nota">Valem a partir do próximo envio, sem reiniciar o worker. <b>Cota diária 0</b> usa a rampa automática (10 → 20 → 30/dia); qualquer outro valor vira cota fixa. <b>Cooldown</b> é o tempo mínimo antes de repetir o mesmo contato. <b>Tentativas 1</b> = falha não é repetida.</div>
       <div class="ferramentas">
-        <label>Cota diÃƒÂ¡ria <input type="number" id="parCota" min="0" max="100" style="width:90px"></label>
-        <label>Intervalo mÃƒÂ­n (s) <input type="number" id="parIntMin" min="10" max="3600" style="width:100px"></label>
-        <label>Intervalo mÃƒÂ¡x (s) <input type="number" id="parIntMax" min="10" max="3600" style="width:100px"></label>
+        <label>Cota diária <input type="number" id="parCota" min="0" max="100" style="width:90px"></label>
+        <label>Intervalo mín (s) <input type="number" id="parIntMin" min="10" max="3600" style="width:100px"></label>
+        <label>Intervalo máx (s) <input type="number" id="parIntMax" min="10" max="3600" style="width:100px"></label>
         <label>Pausa longa a cada <input type="number" id="parPausaCada" min="1" max="100" style="width:80px"></label>
-        <label>Pausa mÃƒÂ­n (s) <input type="number" id="parPausaMin" min="30" max="7200" style="width:100px"></label>
-        <label>Pausa mÃƒÂ¡x (s) <input type="number" id="parPausaMax" min="30" max="7200" style="width:100px"></label>
+        <label>Pausa mín (s) <input type="number" id="parPausaMin" min="30" max="7200" style="width:100px"></label>
+        <label>Pausa máx (s) <input type="number" id="parPausaMax" min="30" max="7200" style="width:100px"></label>
         <label>Cooldown (dias) <input type="number" id="parCooldown" min="0" max="365" style="width:90px"></label>
         <label>Tentativas <input type="number" id="parTentativas" min="1" max="5" style="width:80px"></label>
-        <label>Falhas seguidas atÃƒÂ© pausar <input type="number" id="parFalhas" min="0" max="20" style="width:90px"></label>
+        <label>Falhas seguidas até pausar <input type="number" id="parFalhas" min="0" max="20" style="width:90px"></label>
       </div>
       <div class="ferramentas">
-        <label><input type="checkbox" id="parJanelas"> respeitar janelas de horÃƒÂ¡rio (seg-sex 09:00Ã¢â‚¬â€œ11:30 e 14:00Ã¢â‚¬â€œ17:30)</label>
-        <button class="botao primario" id="btnSalvarParametros">Salvar parÃƒÂ¢metros</button>
-        <button class="botao" id="btnRestaurarParametros">Restaurar padrÃƒÂµes</button>
+        <label><input type="checkbox" id="parJanelas"> respeitar janelas de horário (seg-sex 09:00–11:30 e 14:00–17:30)</label>
+        <button class="botao primario" id="btnSalvarParametros">Salvar parâmetros</button>
+        <button class="botao" id="btnRestaurarParametros">Restaurar padrões</button>
         <span class="contador" id="parResumo"></span>
       </div>
     </article>
@@ -287,45 +287,45 @@
 
   <section class="linha" id="secRobo">
     <article class="card larga">
-      <h2><span class="num">1</span>RobÃƒÂ´ do WhatsApp</h2>
-      <div class="nota">Ãƒâ€° o robÃƒÂ´ que segura a conexÃƒÂ£o com o WhatsApp. Em <b>manual</b> ele fica conectado e sÃƒÂ³ envia quando vocÃƒÂª clica em <b>Enviar agora</b>. Em <b>automÃƒÂ¡tico</b> ele envia sozinho, respeitando cota, intervalo e (se ligado) as janelas de horÃƒÂ¡rio.</div>
+      <h2><span class="num">1</span>Robô do WhatsApp</h2>
+      <div class="nota">É o robô que segura a conexão com o WhatsApp. Em <b>manual</b> ele fica conectado e só envia quando você clica em <b>Enviar agora</b>. Em <b>automático</b> ele envia sozinho, respeitando cota, intervalo e (se ligado) as janelas de horário.</div>
       <div class="ferramentas">
-        <span class="tag" id="roboStatus">Ã¢â‚¬â€</span>
-        <button class="botao primario" id="btnLigarRobo">Ligar robÃƒÂ´ (manual)</button>
-        <button class="botao" id="btnLigarAuto">Ligar automÃƒÂ¡tico</button>
-        <button class="botao" id="btnTrocarNumero">Trocar nÃƒÂºmero do WhatsApp</button>
-        <button class="botao perigo" id="btnDesligarRobo">Desligar robÃƒÂ´</button>
+        <span class="tag" id="roboStatus">—</span>
+        <button class="botao primario" id="btnLigarRobo">Ligar robô (manual)</button>
+        <button class="botao" id="btnLigarAuto">Ligar automático</button>
+        <button class="botao" id="btnTrocarNumero">Trocar número do WhatsApp</button>
+        <button class="botao perigo" id="btnDesligarRobo">Desligar robô</button>
         <label><input type="checkbox" id="chkAutoRobo"> ligar sozinho ao abrir o painel</label>
       </div>
-      <div class="nota" id="roboAviso">Ã¢â‚¬â€</div>
+      <div class="nota" id="roboAviso">—</div>
     </article>
   </section>
 
   <section class="linha" id="secFila">
     <article class="card larga">
       <h2><span class="num">2</span>Fila da campanha</h2>
-      <div class="nota" id="notaFila">Contatos que vÃƒÂ£o receber. A fila fica em <code>dados/campanha.db</code>, separada do banco de assinaturas.</div>
+      <div class="nota" id="notaFila">Contatos que vão receber. A fila fica em <code>dados/campanha.db</code>, separada do banco de assinaturas.</div>
       <div class="ferramentas">
         <button class="botao perigo" id="btnLimparFila">Limpar pendentes</button>
         <span class="contador" id="resumoFila"></span>
       </div>
       <div class="scroll"><table>
-        <thead><tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Produto</th><th>SituaÃƒÂ§ÃƒÂ£o</th><th aria-label="AÃƒÂ§ÃƒÂµes"></th></tr></thead>
+        <thead><tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Produto</th><th>Situação</th><th aria-label="Ações"></th></tr></thead>
         <tbody id="corpoFila"></tbody>
       </table></div>
-      <div class="vazio" id="filaVazia" hidden>Nenhum contato na fila. Use o cartÃƒÂ£o <b>Adicionar contatos</b> abaixo.</div>
-      <div class="nota"><b>Enviar agora</b> manda este contato pelo robÃƒÂ´ (modo manual), na hora. <b>Abrir no navegador</b> sÃƒÂ³ abre a conversa no seu WhatsApp Ã¢â‚¬â€ quem envia ÃƒÂ© vocÃƒÂª, e pode sair do nÃƒÂºmero errado.</div>
+      <div class="vazio" id="filaVazia" hidden>Nenhum contato na fila. Use o cartão <b>Adicionar contatos</b> abaixo.</div>
+      <div class="nota"><b>Enviar agora</b> manda este contato pelo robô (modo manual), na hora. <b>Abrir no navegador</b> só abre a conversa no seu WhatsApp — quem envia é você, e pode sair do número errado.</div>
     </article>
   </section>
 
   <section class="linha avancado">
     <article class="card larga">
-      <h2>SaÃƒÂºde do envio <span class="selo">avanÃƒÂ§ado</span></h2>
-      <div class="nota">A campanha se pausa sozinha quando o envio falha vÃƒÂ¡rias vezes seguidas ou quando o WhatsApp desconecta. Confira o motivo aqui antes de ativar de novo.</div>
+      <h2>Saúde do envio <span class="selo">avançado</span></h2>
+      <div class="nota">A campanha se pausa sozinha quando o envio falha várias vezes seguidas ou quando o WhatsApp desconecta. Confira o motivo aqui antes de ativar de novo.</div>
       <div class="ferramentas">
-        <span class="tag" id="saudeStatus">Ã¢â‚¬â€</span>
+        <span class="tag" id="saudeStatus">—</span>
         <span class="contador" id="saudeResumo"></span>
-        <button class="botao" id="btnAtualizarSaude">Atualizar saÃƒÂºde</button>
+        <button class="botao" id="btnAtualizarSaude">Atualizar saúde</button>
       </div>
       <div class="nota" id="saudeErro"></div>
       <div class="scroll"><table>
@@ -334,8 +334,8 @@
       </table></div>
       <div class="vazio" id="falhasVazio" hidden>Nenhuma falha recente.</div>
       <h3 style="margin:18px 0 0;font-size:14px">Log do worker</h3>
-      <div class="nota">ÃƒÅ¡ltimas linhas de <code>dados/campanha-worker.log</code> (rotaciona em 2 MB).</div>
-      <pre class="log" id="corpoLogs">Ã¢â‚¬â€</pre>
+      <div class="nota">Últimas linhas de <code>dados/campanha-worker.log</code> (rotaciona em 2 MB).</div>
+      <pre class="log" id="corpoLogs">—</pre>
       <div class="ferramentas">
         <button class="botao" id="btnAtualizarLogs">Atualizar log</button>
       </div>
@@ -344,7 +344,7 @@
 
   <section class="linha">
     <article class="card">
-      <div class="rotulo">ElegÃƒÂ­veis</div>
+      <div class="rotulo">Elegíveis</div>
       <div class="valor" id="kpiElegiveis">-</div>
       <div class="detalhe" id="kpiElegiveisDetalhe">prontos para entrar na fila</div>
     </article>
@@ -356,35 +356,35 @@
     <article class="card">
       <div class="rotulo">Enviados</div>
       <div class="valor" id="kpiEnviados">-</div>
-      <div class="detalhe">histÃƒÂ³rico de envios da campanha</div>
+      <div class="detalhe">histórico de envios da campanha</div>
     </article>
     <article class="card">
       <div class="rotulo">Opt-out</div>
       <div class="valor" id="kpiOptout">-</div>
-      <div class="detalhe">nÃƒÂºmeros bloqueados para sempre</div>
+      <div class="detalhe">números bloqueados para sempre</div>
     </article>
     <article class="card">
       <div class="rotulo">Sem telefone</div>
       <div class="valor" id="kpiSemTelefone">-</div>
-      <div class="detalhe">contatos invÃƒÂ¡lidos ou vazios</div>
+      <div class="detalhe">contatos inválidos ou vazios</div>
     </article>
   </section>
 
   <section class="linha avancado">
     <article class="card larga">
-      <h2>Filtro e mensagem <span class="selo">avanÃƒÂ§ado</span></h2>
-      <div class="nota">A campanha nÃƒÂ£o envia nada neste modo. Aqui vocÃƒÂª escolhe o pÃƒÂºblico e revisa exatamente o texto que cada pessoa receberia.</div>
+      <h2>Filtro e mensagem <span class="selo">avançado</span></h2>
+      <div class="nota">A campanha não envia nada neste modo. Aqui você escolhe o público e revisa exatamente o texto que cada pessoa receberia.</div>
       <div class="ferramentas">
         <select id="filtroProduto"><option value="">Todos os produtos</option></select>
         <label><input type="checkbox" id="variar" checked> variar o texto entre contatos</label>
-        <label><input type="checkbox" id="apenasUnicos"> somente nÃƒÂºmeros com 1 cliente</label>
+        <label><input type="checkbox" id="apenasUnicos"> somente números com 1 cliente</label>
         <label>quantidade <input type="number" id="quantidade" value="5" min="1" max="500" style="width:90px"></label>
         <span class="contador" id="resumoBase"></span>
       </div>
       <textarea id="mensagem" rows="9" spellcheck="true"></textarea>
-      <div class="nota">Use <b>{nome}</b> para o primeiro nome. A frase com <b>SAIR</b> ÃƒÂ© acrescentada automaticamente quando falta.</div>
+      <div class="nota">Use <b>{nome}</b> para o primeiro nome. A frase com <b>SAIR</b> é acrescentada automaticamente quando falta.</div>
       <div class="ferramentas">
-        <button class="botao primario" id="btnPrevia">Ver prÃƒÂ©via</button>
+        <button class="botao primario" id="btnPrevia">Ver prévia</button>
         <button class="botao" id="btnFila">Criar fila</button>
         <button class="botao" id="btnPlano">Calcular dias</button>
         <button class="botao" id="btnExportar">Exportar lote (.jsonl)</button>
@@ -395,13 +395,13 @@
   <section class="linha" id="secNumeros">
     <article class="card larga">
       <h2><span class="num">3</span>Adicionar contatos (planilha, lista ou WhatsApp)</h2>
-      <div class="nota">Aceita <b>.xlsx</b>, <b>.xlsb</b> e <b>.csv</b> com colunas de telefone, nome, produto e vencimento (o cabeÃƒÂ§alho ÃƒÂ© reconhecido sozinho). TambÃƒÂ©m dÃƒÂ¡ para colar do Excel: um contato por linha, no formato <code>11999998888;Nome;Produto;31/12/2026</code>. A mensagem vem do cartÃƒÂ£o <b>Filtro e mensagem</b> acima. Nada ÃƒÂ© enviado aqui.</div>
+      <div class="nota">Aceita <b>.xlsx</b>, <b>.xlsb</b> e <b>.csv</b> com colunas de telefone, nome, produto e vencimento (o cabeçalho é reconhecido sozinho). Também dá para colar do Excel: um contato por linha, no formato <code>11999998888;Nome;Produto;31/12/2026</code>. A mensagem vem do cartão <b>Filtro e mensagem</b> acima. Nada é enviado aqui.</div>
       <div class="ferramentas">
         <input type="file" id="arquivoPlanilha" accept=".xlsx,.xlsm,.xlsb,.csv,.txt,.tsv">
         <button class="botao" id="btnLerPlanilha">Ler planilha</button>
         <span class="contador" id="resumoPlanilha"></span>
       </div>
-      <textarea id="numeros" rows="7" spellcheck="false" placeholder="11999998888;Maria;IPTV;31/12/2026&#10;11988887777;JoÃƒÂ£o"></textarea>
+      <textarea id="numeros" rows="7" spellcheck="false" placeholder="11999998888;Maria;IPTV;31/12/2026&#10;11988887777;João"></textarea>
       <div class="ferramentas">
         <button class="botao" id="btnConferirNumeros">Conferir lista</button>
         <button class="botao primario" id="btnAdicionarNumeros">Gravar na fila</button>
@@ -419,34 +419,34 @@
 
   <section class="linha avancado">
     <article class="card larga">
-      <h2>Contatos do WhatsApp <span class="selo">avanÃƒÂ§ado</span></h2>
-      <div class="nota">Pede ao worker conectado a agenda do nÃƒÂºmero da campanha (funciona com o worker jÃƒÂ¡ aberto, manual ou automÃƒÂ¡tico). Grupos, listas de transmissÃƒÂ£o, o remetente, o nÃƒÂºmero de teste e nÃƒÂºmeros invÃƒÂ¡lidos ficam de fora. A lista sÃƒÂ³ preenche a conferÃƒÂªncia acima Ã¢â‚¬â€ nada ÃƒÂ© enviado.</div>
+      <h2>Contatos do WhatsApp <span class="selo">avançado</span></h2>
+      <div class="nota">Pede ao worker conectado a agenda do número da campanha (funciona com o worker já aberto, manual ou automático). Grupos, listas de transmissão, o remetente, o número de teste e números inválidos ficam de fora. A lista só preenche a conferência acima — nada é enviado.</div>
       <div class="ferramentas">
         <button class="botao" id="btnPedirContatos">Pedir lista ao worker</button>
-        <button class="botao" id="btnUsarContatos" disabled>Usar na conferÃƒÂªncia</button>
-        <span class="contador" id="resumoContatos">Ã¢â‚¬â€</span>
+        <button class="botao" id="btnUsarContatos" disabled>Usar na conferência</button>
+        <span class="contador" id="resumoContatos">—</span>
       </div>
     </article>
   </section>
 
   <section class="linha" id="secPrevia" hidden>
     <article class="card larga">
-      <h2>PrÃƒÂ©via das mensagens</h2>
+      <h2>Prévia das mensagens</h2>
       <div class="nota" id="notaPrevia"></div>
       <div class="scroll"><table>
         <thead><tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Produto</th><th>Vencimento</th><th>Mensagem</th><th></th></tr></thead>
         <tbody id="corpoPrevia"></tbody>
       </table></div>
-      <div class="nota">O botÃƒÂ£o <b>WhatsApp</b> abre a conversa com o texto pronto. VocÃƒÂª ainda revisa e aperta enviar Ã¢â‚¬â€ nada ÃƒÂ© disparado pelo sistema.</div>
+      <div class="nota">O botão <b>WhatsApp</b> abre a conversa com o texto pronto. Você ainda revisa e aperta enviar — nada é disparado pelo sistema.</div>
     </article>
   </section>
 
   <section class="linha" id="secPlano" hidden>
     <article class="card larga">
-      <h2>Plano de envio (rampa 10 Ã¢â€ â€™ 20 Ã¢â€ â€™ 30/dia)</h2>
+      <h2>Plano de envio (rampa 10 → 20 → 30/dia)</h2>
       <div class="nota" id="notaPlano"></div>
       <div class="scroll"><table>
-        <thead><tr><th>Dia ÃƒÂºtil</th><th>Mensagens</th><th>Janelas</th></tr></thead>
+        <thead><tr><th>Dia útil</th><th>Mensagens</th><th>Janelas</th></tr></thead>
         <tbody id="corpoPlano"></tbody>
       </table></div>
     </article>
@@ -454,8 +454,8 @@
 
   <section class="linha">
     <article class="card larga">
-      <h2>NÃƒÂºmeros compartilhados (2+ clientes) <span class="selo">avanÃƒÂ§ado</span></h2>
-      <div class="nota">A campanha envia <b>uma mensagem por nÃƒÂºmero</b>. Revise os casos abaixo antes de montar a fila Ã¢â‚¬â€ nÃƒÂºmeros com 4+ clientes podem ser de revendedor ou cadastro repetido.</div>
+      <h2>Números compartilhados (2+ clientes) <span class="selo">avançado</span></h2>
+      <div class="nota">A campanha envia <b>uma mensagem por número</b>. Revise os casos abaixo antes de montar a fila — números com 4+ clientes podem ser de revendedor ou cadastro repetido.</div>
       <div class="ferramentas">
         <span class="contador" id="resumoCompartilhados">carregando...</span>
       </div>
@@ -463,24 +463,24 @@
         <thead><tr><th>Telefone</th><th>Clientes</th><th>Quem</th><th></th></tr></thead>
         <tbody id="corpoCompartilhados"></tbody>
       </table></div>
-      <div class="vazio" id="compartilhadosVazio" hidden>Nenhum nÃƒÂºmero compartilhado.</div>
+      <div class="vazio" id="compartilhadosVazio" hidden>Nenhum número compartilhado.</div>
     </article>
   </section>
 
   <section class="linha avancado">
     <article class="card larga">
-      <h2>Opt-out (bloqueio global) <span class="selo">avanÃƒÂ§ado</span></h2>
-      <div class="nota">Quem pediu para sair fica bloqueado para sempre, em qualquer campanha futura. Bloquear tambÃƒÂ©m remove o nÃƒÂºmero da fila pendente.</div>
+      <h2>Opt-out (bloqueio global) <span class="selo">avançado</span></h2>
+      <div class="nota">Quem pediu para sair fica bloqueado para sempre, em qualquer campanha futura. Bloquear também remove o número da fila pendente.</div>
       <div class="ferramentas">
-        <input type="text" id="optTelefone" placeholder="DDD + nÃƒÂºmero (ex.: 11999998888)" maxlength="20">
+        <input type="text" id="optTelefone" placeholder="DDD + número (ex.: 11999998888)" maxlength="20">
         <input type="text" id="optMotivo" placeholder="Motivo (opcional)" maxlength="200">
-        <button class="botao primario" id="btnBloquear">Bloquear nÃƒÂºmero</button>
+        <button class="botao primario" id="btnBloquear">Bloquear número</button>
       </div>
       <div class="scroll"><table>
         <thead><tr><th>Telefone</th><th>Motivo</th><th>Origem</th><th>Bloqueado em</th><th></th></tr></thead>
         <tbody id="corpoOptout"></tbody>
       </table></div>
-      <div class="vazio" id="optoutVazio" hidden>Nenhum nÃƒÂºmero bloqueado.</div>
+      <div class="vazio" id="optoutVazio" hidden>Nenhum número bloqueado.</div>
     </article>
   </section>
 </main>
@@ -496,12 +496,12 @@
 
   const numero = (v) => (v || 0).toLocaleString("pt-BR");
   const formatarTelefone = (n) => {
-    if (!n) return "Ã¢â‚¬â€";
+    if (!n) return "—";
     const resto = n.slice(4);
     return `+${n.slice(0, 2)} ${n.slice(2, 4)} ${resto.slice(0, resto.length - 4)}-${resto.slice(-4)}`;
   };
   const dataBR = (iso) => {
-    if (!iso) return "Ã¢â‚¬â€";
+    if (!iso) return "—";
     const [a, m, d] = String(iso).slice(0, 10).split("-");
     return d && m && a ? `${d}/${m}/${a}` : iso;
   };
@@ -518,8 +518,8 @@
     botao.textContent = tudo ? "Modo simples" : "Mostrar tudo";
     botao.classList.toggle("ativo", tudo);
     botao.title = tudo
-      ? "Esconder as funÃƒÂ§ÃƒÂµes avanÃƒÂ§adas"
-      : "Mostrar parÃƒÂ¢metros, logs, opt-out e outras funÃƒÂ§ÃƒÂµes avanÃƒÂ§adas";
+      ? "Esconder as funções avançadas"
+      : "Mostrar parâmetros, logs, opt-out e outras funções avançadas";
   }
 
   function toast(texto, erro = false) {    const el = $("toast");
@@ -539,7 +539,7 @@
       headers: { "X-API-Key": CHAVE, "Content-Type": "application/json" },
       body: corpo ? JSON.stringify(corpo) : undefined,
     });
-    if (resposta.status === 401) { abrirLogin(); throw new Error("Chave invÃƒÂ¡lida"); }
+    if (resposta.status === 401) { abrirLogin(); throw new Error("Chave inválida"); }
     if (!resposta.ok) {
       let detalhe = `HTTP ${resposta.status}`;
       try {
@@ -556,7 +556,7 @@
   async function carregarConfig() {
     CFG = await api("/campanha/config");
     $("subtitulo").textContent =
-      `${CFG.marca} Ã‚Â· remetente ${formatarTelefone(CFG.numero_remetente)} Ã‚Â· banco ${CFG.banco_campanha}`;
+      `${CFG.marca} · remetente ${formatarTelefone(CFG.numero_remetente)} · banco ${CFG.banco_campanha}`;
     if (document.activeElement !== $("numeroRemetente")) {
       $("numeroRemetente").value = CFG.numero_remetente || "";
     }
@@ -564,9 +564,9 @@
       $("numeroTeste").value = CFG.numero_teste || "";
     }
     $("numeroRemetenteNota").textContent =
-      `remetente: ${formatarTelefone(CFG.numero_remetente)} Ã‚Â· ` +
-      `teste: ${CFG.numero_teste ? formatarTelefone(CFG.numero_teste) : "nÃƒÂ£o definido"}`;
-    const trava = CFG.envio_real_habilitado ? "" : " Envio real bloqueado por trava de seguranÃƒÂ§a.";
+      `remetente: ${formatarTelefone(CFG.numero_remetente)} · ` +
+      `teste: ${CFG.numero_teste ? formatarTelefone(CFG.numero_teste) : "não definido"}`;
+    const trava = CFG.envio_real_habilitado ? "" : " Envio real bloqueado por trava de segurança.";
     const janela = CFG.janelas_ativas
       ? " Janelas de horario ativas."
       : " Modo manual: envia a qualquer hora.";
@@ -578,7 +578,7 @@
     $("btnPausar").disabled = !CFG.ativa;
     $("btnAtivar").title = CFG.envio_ativo
       ? "Ligar a campanha"
-      : "DisponÃƒÂ­vel quando existir canal de envio (fase 2)";
+      : "Disponível quando existir canal de envio (fase 2)";
     if (!$("mensagem").value.trim()) $("mensagem").value = CFG.mensagem_padrao;
     aplicarMetricas(CFG.metricas);
   }
@@ -604,14 +604,14 @@
     }
     const cota = valores.cota_diaria > 0
       ? `cota fixa ${valores.cota_diaria}/dia`
-      : "cota pela rampa 10 Ã¢â€ â€™ 20 Ã¢â€ â€™ 30";
+      : "cota pela rampa 10 → 20 → 30";
     $("parResumo").textContent =
-      `${cota} Ã‚Â· intervalo ${valores.intervalo_min}Ã¢â‚¬â€œ${valores.intervalo_max} s Ã‚Â· ` +
-      `pausa longa a cada ${valores.pausa_cada} (${valores.pausa_min}Ã¢â‚¬â€œ${valores.pausa_max} s) Ã‚Â· ` +
-      `cooldown ${valores.cooldown_dias} dia(s) Ã‚Â· ${valores.max_tentativas} tentativa(s) Ã‚Â· ` +
+      `${cota} · intervalo ${valores.intervalo_min}–${valores.intervalo_max} s · ` +
+      `pausa longa a cada ${valores.pausa_cada} (${valores.pausa_min}–${valores.pausa_max} s) · ` +
+      `cooldown ${valores.cooldown_dias} dia(s) · ${valores.max_tentativas} tentativa(s) · ` +
       (valores.max_falhas_seguidas > 0
-        ? `pausa apÃƒÂ³s ${valores.max_falhas_seguidas} falha(s) seguida(s) Ã‚Â· `
-        : "sem pausa automÃƒÂ¡tica Ã‚Â· ") +
+        ? `pausa após ${valores.max_falhas_seguidas} falha(s) seguida(s) · `
+        : "sem pausa automática · ") +
       (valores.respeitar_janelas ? "janelas ativas" : "modo manual");
   }
 
@@ -621,20 +621,20 @@
   }
 
   function pintarSaude(dados) {
-    const rotulos = { ok: "OK", atencao: "ATENÃƒâ€¡ÃƒÆ’O", pausada: "PAUSADA", desligada: "DESLIGADA" };
+    const rotulos = { ok: "OK", atencao: "ATENÇÃO", pausada: "PAUSADA", desligada: "DESLIGADA" };
     const classes = { ok: "ok", atencao: "", pausada: "ruim", desligada: "" };
     const etiqueta = $("saudeStatus");
-    etiqueta.textContent = rotulos[dados.status] || dados.status || "Ã¢â‚¬â€";
+    etiqueta.textContent = rotulos[dados.status] || dados.status || "—";
     etiqueta.className = `tag ${classes[dados.status] || ""}`.trim();
     const trabalho = dados.worker || {};
     const workerTexto = !trabalho.online
       ? "worker desligado"
       : trabalho.modo === "manual"
         ? "worker manual online"
-        : "worker automÃƒÂ¡tico online";
+        : "worker automático online";
     $("saudeResumo").textContent =
-      `falhas seguidas: ${dados.falhas_consecutivas}/${dados.limite_falhas || "Ã¢Ë†Å¾"} Ã‚Â· ` +
-      `erros do worker: ${dados.erros_worker || 0} Ã‚Â· ${workerTexto} Ã‚Â· ` +
+      `falhas seguidas: ${dados.falhas_consecutivas}/${dados.limite_falhas || "∞"} · ` +
+      `erros do worker: ${dados.erros_worker || 0} · ${workerTexto} · ` +
       (dados.ativa
         ? "campanha ativa"
         : `campanha pausada${dados.motivo_pausa ? ` (${dados.motivo_pausa})` : ""}`);
@@ -642,24 +642,24 @@
     if (dados.motivo_pausa) linhas.push(`Pausa: ${dados.motivo_pausa}`);
     if (dados.ultimo_erro) {
       linhas.push(
-        `ÃƒÅ¡ltimo erro de envio: ${dados.ultimo_erro}` +
+        `Último erro de envio: ${dados.ultimo_erro}` +
         (dados.ultimo_erro_em ? ` (${dados.ultimo_erro_em})` : "")
       );
     }
     if (dados.ultimo_erro_worker) {
       linhas.push(
-        `ÃƒÅ¡ltimo erro do worker: ${dados.ultimo_erro_worker}` +
+        `Último erro do worker: ${dados.ultimo_erro_worker}` +
         (dados.ultimo_erro_worker_em ? ` (${dados.ultimo_erro_worker_em})` : "")
       );
     }
-    $("saudeErro").textContent = linhas.join(" Ã‚Â· ") || "Nenhum erro registrado.";
+    $("saudeErro").textContent = linhas.join(" · ") || "Nenhum erro registrado.";
     const falhas = dados.falhas_recentes || [];
     $("falhasVazio").hidden = falhas.length > 0;
     $("corpoFalhas").innerHTML = falhas.map((f) => `
       <tr>
         <td>${escapar(f.criado_em)}</td>
         <td>${escapar(f.telefone)}</td>
-        <td>${escapar(f.erro || "Ã¢â‚¬â€")}</td>
+        <td>${escapar(f.erro || "—")}</td>
       </tr>`).join("");
   }
 
@@ -670,7 +670,7 @@
   async function carregarLogs() {
     const dados = await api("/campanha/logs?linhas=25");
     $("corpoLogs").textContent = (dados.linhas || []).join("\n") ||
-      (dados.existe ? "(log vazio)" : "(o worker ainda nÃƒÂ£o gravou o log)");
+      (dados.existe ? "(log vazio)" : "(o worker ainda não gravou o log)");
   }
 
   function lerParametrosDoFormulario() {
@@ -688,7 +688,7 @@
     };
     Object.entries(valores).forEach(([chave, valor]) => {
       if (chave !== "respeitar_janelas" && !Number.isFinite(valor)) {
-        throw new Error("Preencha todos os parÃƒÂ¢metros com nÃƒÂºmeros inteiros.");
+        throw new Error("Preencha todos os parâmetros com números inteiros.");
       }
     });
     return valores;
@@ -721,11 +721,11 @@
     $("kpiElegiveis").textContent = numero(dados.total);
     $("kpiSemTelefone").textContent = numero(dados.resumo.sem_telefone);
     $("resumoBase").textContent =
-      `${numero(dados.total)} elegÃƒÂ­veis Ã‚Â· ${numero(dados.resumo.lidos)} lidos na base Ã‚Â· ` +
-      `${numero(dados.resumo.repetido)} repetido(s) (1 msg por nÃƒÂºmero) Ã‚Â· ` +
-      `${numero(dados.resumo.compartilhado)} fora por nÃƒÂºmero compartilhado Ã‚Â· ` +
-      `${numero(dados.resumo.optout)} em opt-out Ã‚Â· ${numero(dados.resumo.em_cooldown)} em cooldown Ã‚Â· ` +
-      `${numero(dados.resumo.ja_na_fila)} jÃƒÂ¡ na fila Ã‚Â· ${numero(dados.resumo.remetente + dados.resumo.teste)} ignorado(s) por ser remetente/teste`;
+      `${numero(dados.total)} elegíveis · ${numero(dados.resumo.lidos)} lidos na base · ` +
+      `${numero(dados.resumo.repetido)} repetido(s) (1 msg por número) · ` +
+      `${numero(dados.resumo.compartilhado)} fora por número compartilhado · ` +
+      `${numero(dados.resumo.optout)} em opt-out · ${numero(dados.resumo.em_cooldown)} em cooldown · ` +
+      `${numero(dados.resumo.ja_na_fila)} já na fila · ${numero(dados.resumo.remetente + dados.resumo.teste)} ignorado(s) por ser remetente/teste`;
   }
 
   async function acompanharEnvio(alvoId) {
@@ -749,12 +749,12 @@
       if (item.status === "falha") {
         await carregarFila();
         await carregarSaude().catch(() => {});
-        toast(`Falhou para +${item.telefone}. Veja em SaÃƒÂºde do envio.`, true);
+        toast(`Falhou para +${item.telefone}. Veja em Saúde do envio.`, true);
         return;
       }
       if (!item.pedido) {
         await carregarFila();
-        toast("Pedido cancelado ou nÃƒÂ£o atendido pelo worker.", true);
+        toast("Pedido cancelado ou não atendido pelo worker.", true);
         return;
       }
     }
@@ -771,18 +771,18 @@
     $("filaVazia").hidden = itens.length > 0;
     const pendentes = itens.filter((a) => a.status === "pendente").length;
     $("resumoFila").textContent = itens.length
-      ? `${numero(pendentes)} pendente(s) Ã‚Â· ${numero(itens.length - pendentes)} jÃƒÂ¡ processado(s)`
+      ? `${numero(pendentes)} pendente(s) · ${numero(itens.length - pendentes)} já processado(s)`
       : "";
     $("corpoFila").innerHTML = itens.map((a) => `
       <tr>
         <td>${a.id}</td>
-        <td>${escapar(a.nome || "Ã¢â‚¬â€")}</td>
+        <td>${escapar(a.nome || "—")}</td>
         <td>${escapar(a.telefone)}</td>
-        <td>${escapar(a.produto || "Ã¢â‚¬â€")}</td>
+        <td>${escapar(a.produto || "—")}</td>
         <td><span class="tag ${a.status === "enviado" ? "ok" : a.status === "falha" ? "ruim" : ""}">${escapar(a.status)}</span>${a.pedido ? ' <span class="tag">na fila do worker</span>' : ""}</td>
         <td class="acoes-celula">
-          <button class="botao primario" data-enviar-alvo="${a.id}" ${a.status === "pendente" ? "" : "disabled"} title="${manualPronto ? "Enviar agora pelo robÃƒÂ´ manual" : "Ligue o robÃƒÂ´ em modo manual para usar este botÃƒÂ£o"}">Enviar agora</button>
-          <button class="botao" data-whatsapp-fila="${escapar(a.telefone)}" title="Abre a conversa no seu navegador. Quem envia ÃƒÂ© vocÃƒÂª Ã¢â‚¬â€ pode sair do nÃƒÂºmero errado.">Abrir no navegador</button>
+          <button class="botao primario" data-enviar-alvo="${a.id}" ${a.status === "pendente" ? "" : "disabled"} title="${manualPronto ? "Enviar agora pelo robô manual" : "Ligue o robô em modo manual para usar este botão"}">Enviar agora</button>
+          <button class="botao" data-whatsapp-fila="${escapar(a.telefone)}" title="Abre a conversa no seu navegador. Quem envia é você — pode sair do número errado.">Abrir no navegador</button>
           <button class="botao" data-remover-alvo="${a.id}">Remover</button>
         </td>
       </tr>`).join("");
@@ -793,7 +793,7 @@
         if (!confirm("Enviar agora para este contato?")) return;
         try {
           await api(`/campanha/fila/${enviar.dataset.enviarAlvo}/enviar`, "POST");
-          toast("Pedido enviado ao worker. Aguardando confirmaÃƒÂ§ÃƒÂ£oÃ¢â‚¬Â¦");
+          toast("Pedido enviado ao worker. Aguardando confirmação…");
           await acompanharEnvio(enviar.dataset.enviarAlvo);
         } catch (erro) { toast(erro.message, true); }
         return;
@@ -827,12 +827,12 @@
       const itens = dados.itens || [];
       $("compartilhadosVazio").hidden = itens.length > 0;
       $("resumoCompartilhados").textContent =
-        `${numero(dados.total_numeros)} nÃƒÂºmero(s) com 2+ clientes Ã‚Â· ${numero(dados.total_clientes)} cadastros envolvidos`;
+        `${numero(dados.total_numeros)} número(s) com 2+ clientes · ${numero(dados.total_clientes)} cadastros envolvidos`;
       $("corpoCompartilhados").innerHTML = itens.map((grupo) => `
         <tr>
           <td>${escapar(grupo.telefone)}</td>
           <td><span class="tag ${grupo.total >= 4 ? "ruim" : ""}">${grupo.total}</span></td>
-          <td>${grupo.clientes.map((c) => escapar(c.nome)).join(" Ã‚Â· ")}</td>
+          <td>${grupo.clientes.map((c) => escapar(c.nome)).join(" · ")}</td>
           <td><button class="botao perigo" data-bloquear-numero="${escapar(grupo.telefone)}">Bloquear</button></td>
         </tr>`).join("");
       $("corpoCompartilhados").onclick = async (evento) => {
@@ -843,9 +843,9 @@
         try {
           await api("/campanha/optouts", "POST", {
             telefone,
-            motivo: "revisÃƒÂ£o de nÃƒÂºmero compartilhado",
+            motivo: "revisão de número compartilhado",
           });
-          toast(`NÃƒÂºmero ${telefone} bloqueado.`);
+          toast(`Número ${telefone} bloqueado.`);
           await Promise.all([carregarCompartilhados(), carregarOptouts(), carregarFila(), carregarElegiveis()]);
         } catch (erro) { toast(erro.message, true); }
       };
@@ -859,8 +859,8 @@
     $("corpoOptout").innerHTML = itens.map((o) => `
       <tr>
         <td>${escapar(o.telefone)}</td>
-        <td>${escapar(o.motivo || "Ã¢â‚¬â€")}</td>
-        <td>${escapar(o.origem || "Ã¢â‚¬â€")}</td>
+        <td>${escapar(o.motivo || "—")}</td>
+        <td>${escapar(o.origem || "—")}</td>
         <td>${escapar(o.criado_em)}</td>
         <td><button class="botao" data-remover="${escapar(o.telefone)}">Remover</button></td>
       </tr>`).join("");
@@ -868,7 +868,7 @@
       botao.addEventListener("click", async () => {
         try {
           await api(`/campanha/optouts/${encodeURIComponent(botao.dataset.remover)}`, "DELETE");
-          toast("NÃƒÂºmero desbloqueado.");
+          toast("Número desbloqueado.");
           await carregarOptouts();
           await carregarElegiveis();
         } catch (erro) { toast(erro.message, true); }
@@ -889,11 +889,11 @@
       await carregarOptouts();
       await carregarCompartilhados();
     } catch (erro) {
-      if (erro.message !== "Chave invÃƒÂ¡lida") toast(erro.message, true);
+      if (erro.message !== "Chave inválida") toast(erro.message, true);
     }
   }
 
-  /* ------------------------------- aÃƒÂ§ÃƒÂµes --------------------------------- */
+  /* ------------------------------- ações --------------------------------- */
 
   $("btnPrevia").addEventListener("click", async () => {
     try {
@@ -906,13 +906,13 @@
       });
       $("secPrevia").hidden = false;
       $("notaPrevia").textContent =
-        `${numero(dados.total)} elegÃƒÂ­veis no total Ã‚Â· mostrando ${numero(dados.itens.length)} Ã‚Â· nada foi gravado`;
+        `${numero(dados.total)} elegíveis no total · mostrando ${numero(dados.itens.length)} · nada foi gravado`;
       $("corpoPrevia").innerHTML = dados.itens.map((item, indice) => `
         <tr>
           <td>${indice + 1}</td>
           <td>${escapar(item.nome)}</td>
           <td>${escapar(item.telefone)}</td>
-          <td>${escapar(item.produto || "Ã¢â‚¬â€")}</td>
+          <td>${escapar(item.produto || "—")}</td>
           <td>${dataBR(item.vencimento)}</td>
           <td class="msg">${escapar(item.texto)}</td>
           <td class="acoes-celula">
@@ -938,8 +938,8 @@
         const telefone = botao.dataset.bloquearPrevia;
         if (!confirm(`Bloquear ${telefone} para sempre?`)) return;
         try {
-          await api("/campanha/optouts", "POST", { telefone, motivo: "bloqueado na prÃƒÂ©via" });
-          toast(`NÃƒÂºmero ${telefone} bloqueado.`);
+          await api("/campanha/optouts", "POST", { telefone, motivo: "bloqueado na prévia" });
+          toast(`Número ${telefone} bloqueado.`);
           await Promise.all([carregarCompartilhados(), carregarOptouts(), carregarFila(), carregarElegiveis()]);
           botao.closest("tr").remove();
         } catch (erro) { toast(erro.message, true); }
@@ -949,7 +949,7 @@
   });
 
   $("btnFila").addEventListener("click", async () => {
-    if (!confirm("Gravar os elegÃƒÂ­veis na fila da campanha? Nada serÃƒÂ¡ enviado.")) return;
+    if (!confirm("Gravar os elegíveis na fila da campanha? Nada será enviado.")) return;
     try {
       const dados = await api("/campanha/fila", "POST", {
         modelo: $("mensagem").value,
@@ -990,8 +990,8 @@
       $("numeros").value = dados.linhas;
       $("resumoPlanilha").textContent =
         `${numero(dados.total)} linha(s) com telefone` +
-        (dados.sem_telefone ? ` Ã‚Â· ${numero(dados.sem_telefone)} sem telefone` : "") +
-        (dados.cortado ? " Ã‚Â· cortado em 20.000" : "");
+        (dados.sem_telefone ? ` · ${numero(dados.sem_telefone)} sem telefone` : "") +
+        (dados.cortado ? " · cortado em 20.000" : "");
       toast("Planilha lida. Confira a lista e clique em Conferir lista.");
     } catch (erro) { toast(erro.message, true); }
   });
@@ -1000,23 +1000,23 @@
     const dados = await api("/campanha/numeros/previa", "POST", listaNumeros());
     $("previaNumeros").hidden = false;
     $("corpoNovosNumeros").innerHTML = (dados.novos || []).map((i) => `
-      <tr><td>${escapar(i.telefone)}</td><td>${escapar(i.nome || "Ã¢â‚¬â€")}</td>
-      <td>${escapar(i.produto || "Ã¢â‚¬â€")}</td><td>${dataBR(i.vencimento)}</td></tr>`).join("");
+      <tr><td>${escapar(i.telefone)}</td><td>${escapar(i.nome || "—")}</td>
+      <td>${escapar(i.produto || "—")}</td><td>${dataBR(i.vencimento)}</td></tr>`).join("");
     const motivos = {};
     (dados.ignorados || []).forEach((i) => {
       motivos[i.motivo] = (motivos[i.motivo] || 0) + 1;
     });
-    const detalhe = Object.entries(motivos).map(([m, q]) => `${q} ${m}`).join(" Ã‚Â· ");
+    const detalhe = Object.entries(motivos).map(([m, q]) => `${q} ${m}`).join(" · ");
     $("notaIgnorados").innerHTML =
       `<b>${numero(dados.total_novos)}</b> entram na fila` +
       (dados.total_ignorados
-        ? ` Ã‚Â· <b>${numero(dados.total_ignorados)}</b> fora${detalhe ? `: ${escapar(detalhe)}` : ""}`
+        ? ` · <b>${numero(dados.total_ignorados)}</b> fora${detalhe ? `: ${escapar(detalhe)}` : ""}`
         : "") +
       ((dados.novos || []).length < dados.total_novos
-        ? ` Ã‚Â· mostrando os ${numero((dados.novos || []).length)} primeiros`
+        ? ` · mostrando os ${numero((dados.novos || []).length)} primeiros`
         : "");
     $("resumoNumeros").textContent =
-      `${numero(dados.total_novos)} novo(s) Ã‚Â· ${numero(dados.total_ignorados)} fora`;
+      `${numero(dados.total_novos)} novo(s) · ${numero(dados.total_ignorados)} fora`;
   }
 
   $("btnConferirNumeros").addEventListener("click", async () => {
@@ -1026,11 +1026,11 @@
 
   $("btnAdicionarNumeros").addEventListener("click", async () => {
     if (!$("numeros").value.trim()) { toast("Cole a lista ou leia uma planilha.", true); return; }
-    if (!confirm("Gravar esses nÃƒÂºmeros na fila? Nada serÃƒÂ¡ enviado agora.")) return;
+    if (!confirm("Gravar esses números na fila? Nada será enviado agora.")) return;
     try {
       const dados = await api("/campanha/numeros", "POST", listaNumeros());
       toast(
-        `${dados.adicionados} nÃƒÂºmero(s) na fila.` +
+        `${dados.adicionados} número(s) na fila.` +
         (dados.ignorados.length ? ` ${dados.ignorados.length} ficaram de fora.` : "")
       );
       $("numeros").value = "";
@@ -1046,7 +1046,7 @@
   async function carregarContatos() {
     const dados = await api("/campanha/contatos");
     $("resumoContatos").textContent = dados.total
-      ? `${numero(dados.total)} contato(s) Ã‚Â· ${dados.atualizado_em || "sem data"}`
+      ? `${numero(dados.total)} contato(s) · ${dados.atualizado_em || "sem data"}`
       : "nenhuma lista recebida ainda";
     $("btnUsarContatos").disabled = !dados.total;
     return dados;
@@ -1055,14 +1055,14 @@
   $("btnPedirContatos").addEventListener("click", async () => {
     try {
       const pedido = await api("/campanha/contatos/pedir", "POST", {});
-      toast("Pedido enviado ao worker. Lendo a agendaÃ¢â‚¬Â¦");
+      toast("Pedido enviado ao worker. Lendo a agenda…");
       const limite = Date.now() + 240000;
       while (Date.now() < limite) {
         await new Promise((resolver) => setTimeout(resolver, 3000));
         let dados;
         try { dados = await api("/campanha/contatos"); } catch { continue; }
         if (dados.total) {
-          $("resumoContatos").textContent = `${numero(dados.total)} contato(s) recebidosÃ¢â‚¬Â¦`;
+          $("resumoContatos").textContent = `${numero(dados.total)} contato(s) recebidos…`;
         }
         if (dados.completo_em && dados.completo_em >= pedido.pedido_em) {
           await carregarContatos();
@@ -1070,7 +1070,7 @@
           return;
         }
       }
-      toast("A lista nÃƒÂ£o chegou. Confira se o worker estÃƒÂ¡ online.", true);
+      toast("A lista não chegou. Confira se o worker está online.", true);
     } catch (erro) { toast(erro.message, true); }
   });
 
@@ -1080,7 +1080,7 @@
       if (!dados.total || !dados.linhas) { toast("Nenhuma lista recebida ainda.", true); return; }
       $("numeros").value = dados.linhas;
       $("numeros").scrollIntoView({ behavior: "smooth", block: "center" });
-      $("resumoPlanilha").textContent = `${numero(dados.total)} contato(s) na conferÃƒÂªncia`;
+      $("resumoPlanilha").textContent = `${numero(dados.total)} contato(s) na conferência`;
       toast("Lista copiada. Confira e clique em Gravar na fila.");
     } catch (erro) { toast(erro.message, true); }
   });
@@ -1093,7 +1093,7 @@
       <tr>
         <td>${dataBR(dia.data)}</td>
         <td>${numero(dia.quantidade)}</td>
-        <td>${escapar((dia.janelas || []).join(" Ã‚Â· "))}</td>
+        <td>${escapar((dia.janelas || []).join(" · "))}</td>
       </tr>`).join("");
   }
 
@@ -1121,7 +1121,7 @@
         telefone: $("optTelefone").value,
         motivo: $("optMotivo").value,
       });
-      toast(`NÃƒÂºmero ${dados.telefone} bloqueado. ${dados.removidos_da_fila} removido(s) da fila.`);
+      toast(`Número ${dados.telefone} bloqueado. ${dados.removidos_da_fila} removido(s) da fila.`);
       $("optTelefone").value = "";
       $("optMotivo").value = "";
       await carregarOptouts();
@@ -1138,8 +1138,8 @@
         teste: $("numeroTeste").value || null,
       });
       toast(
-        `Remetente: ${formatarTelefone(dados.numero_remetente)} Ã‚Â· ` +
-        `teste: ${dados.numero_teste ? formatarTelefone(dados.numero_teste) : "nÃƒÂ£o definido"}`
+        `Remetente: ${formatarTelefone(dados.numero_remetente)} · ` +
+        `teste: ${dados.numero_teste ? formatarTelefone(dados.numero_teste) : "não definido"}`
       );
       await carregarConfig();
       await carregarElegiveis();
@@ -1150,22 +1150,22 @@
     try {
       const dados = await api("/campanha/parametros", "POST", lerParametrosDoFormulario());
       preencherParametros(dados.parametros);
-      toast("ParÃƒÂ¢metros salvos. Valem a partir do prÃƒÂ³ximo envio.");
+      toast("Parâmetros salvos. Valem a partir do próximo envio.");
       await carregarConfig();
     } catch (erro) { toast(erro.message, true); }
   });
 
   $("btnRestaurarParametros").addEventListener("click", async () => {
-    if (!confirm("Restaurar todos os parÃƒÂ¢metros de envio para o padrÃƒÂ£o?")) return;
+    if (!confirm("Restaurar todos os parâmetros de envio para o padrão?")) return;
     try {
       const dados = await api("/campanha/parametros", "DELETE");
       preencherParametros(dados.parametros);
-      toast("ParÃƒÂ¢metros padrÃƒÂ£o restaurados.");
+      toast("Parâmetros padrão restaurados.");
       await carregarConfig();
     } catch (erro) { toast(erro.message, true); }
   });
 
-  /* -------------------------------- robÃƒÂ´ --------------------------------- */
+  /* -------------------------------- robô --------------------------------- */
 
   const CHAVE_AUTO_ROBO = "campanha.autoRobo";
   let autoRobo = localStorage.getItem(CHAVE_AUTO_ROBO) !== "0";
@@ -1174,13 +1174,13 @@
   function pintarRobo(dados) {
     const etiqueta = $("roboStatus");
     if (dados.online) {
-      etiqueta.textContent = dados.modo === "manual" ? "robÃƒÂ´ manual online" : "robÃƒÂ´ automÃƒÂ¡tico online";
+      etiqueta.textContent = dados.modo === "manual" ? "robô manual online" : "robô automático online";
       etiqueta.className = "tag ok";
     } else if (dados.pid_vivo) {
-      etiqueta.textContent = "robÃƒÂ´ iniciandoÃ¢â‚¬Â¦";
+      etiqueta.textContent = "robô iniciando…";
       etiqueta.className = "tag";
     } else {
-      etiqueta.textContent = "robÃƒÂ´ desligado";
+      etiqueta.textContent = "robô desligado";
       etiqueta.className = "tag";
     }
     $("chkAutoRobo").checked = autoRobo;
@@ -1189,16 +1189,16 @@
     if (dados.pid) detalhe.push(`PID ${dados.pid}`);
     if (dados.visto_em) detalhe.push(`visto ${dados.visto_em}`);
     if (!dados.online && !dados.pid_vivo) {
-      detalhe.push("Ã¢â‚¬Å“Ligar robÃƒÂ´Ã¢â‚¬Â sobe em modo manual; nada sai sozinho");
+      detalhe.push("“Ligar robô” sobe em modo manual; nada sai sozinho");
     }
     if (
       dados.numero_conectado &&
       CFG && CFG.numero_remetente &&
       dados.numero_conectado !== CFG.numero_remetente
     ) {
-      detalhe.push("Ã¢Å¡Â  o remetente da campanha ainda ÃƒÂ© outro Ã¢â‚¬â€ ajuste em Mostrar tudo Ã¢â‚¬Âº NÃƒÂºmeros da campanha");
+      detalhe.push("⚠ o remetente da campanha ainda é outro — ajuste em Mostrar tudo › Números da campanha");
     }
-    $("roboAviso").textContent = detalhe.join(" Ã‚Â· ") || "Ã¢â‚¬â€";
+    $("roboAviso").textContent = detalhe.join(" · ") || "—";
   }
 
   async function carregarRobo() {
@@ -1226,12 +1226,12 @@
     try {
       const dados = await api("/campanha/worker/ligar", "POST", { modo });
       if (dados.worker) pintarRobo(dados.worker);
-      toast(dados.ligado ? "RobÃƒÂ´ subindo. Conectando ao WhatsAppÃ¢â‚¬Â¦" : (dados.motivo || "RobÃƒÂ´ jÃƒÂ¡ estava ligado."));
+      toast(dados.ligado ? "Robô subindo. Conectando ao WhatsApp…" : (dados.motivo || "Robô já estava ligado."));
       if (!dados.ligado) return;
       const pronto = await esperarRobo();
       toast(
-        pronto ? `RobÃƒÂ´ online (${pronto.modo}).`
-               : "O robÃƒÂ´ ainda nÃƒÂ£o conectou. Veja o log em SaÃƒÂºde do envio.",
+        pronto ? `Robô online (${pronto.modo}).`
+               : "O robô ainda não conectou. Veja o log em Saúde do envio.",
         !pronto
       );
     } catch (erro) { toast(erro.message, true); }
@@ -1244,38 +1244,38 @@
       const dados = await api("/campanha/worker/ligar", "POST", { modo: "parear" });
       if (dados.worker) pintarRobo(dados.worker);
       if (!dados.ligado) {
-        toast(dados.motivo || "JÃƒÂ¡ existe um robÃƒÂ´ aberto.", true);
+        toast(dados.motivo || "Já existe um robô aberto.", true);
         return;
       }
-      toast("Abrindo o WhatsApp com o QR. Escaneie com o celular do novo nÃƒÂºmero.");
+      toast("Abrindo o WhatsApp com o QR. Escaneie com o celular do novo número.");
       for (let i = 0; i < 50; i++) {
         await new Promise((resolver) => setTimeout(resolver, 3000));
         let atual;
         try { atual = await api("/campanha/worker"); } catch { continue; }
         pintarRobo(atual);
         if (atual.numero_conectado) {
-          toast(`Novo nÃƒÂºmero conectado: +${atual.numero_conectado}. Clique em "Ligar robÃƒÂ´ (manual)" para trabalhar com ele.`);
+          toast(`Novo número conectado: +${atual.numero_conectado}. Clique em "Ligar robô (manual)" para trabalhar com ele.`);
           await carregarConfig().catch(() => {});
           return;
         }
       }
-      toast("NÃƒÂ£o confirmei o pareamento. Veja a janela do WhatsApp ou o log.", true);
+      toast("Não confirmei o pareamento. Veja a janela do WhatsApp ou o log.", true);
     } catch (erro) { toast(erro.message, true); }
   }
 
   $("btnTrocarNumero").addEventListener("click", async () => {
     const ok = confirm(
-      "Trocar o nÃƒÂºmero do WhatsApp da campanha?\n\n" +
-      "1) O nÃƒÂºmero atual serÃƒÂ¡ DESVINCULADO (sai da lista de aparelhos do celular).\n" +
+      "Trocar o número do WhatsApp da campanha?\n\n" +
+      "1) O número atual será DESVINCULADO (sai da lista de aparelhos do celular).\n" +
       "2) Uma janela do Chrome abre com o QR code.\n" +
-      "3) VocÃƒÂª escaneia com o celular do novo nÃƒÂºmero.\n\n" +
-      "Nenhuma mensagem ÃƒÂ© enviada nesse processo."
+      "3) Você escaneia com o celular do novo número.\n\n" +
+      "Nenhuma mensagem é enviada nesse processo."
     );
     if (!ok) return;
     autoRobo = false;
     localStorage.setItem(CHAVE_AUTO_ROBO, "0");
     try {
-      toast("Desconectando o nÃƒÂºmero atualÃ¢â‚¬Â¦ pode levar atÃƒÂ© 1 minuto.");
+      toast("Desconectando o número atual… pode levar até 1 minuto.");
       await api("/campanha/worker/desconectar", "POST", {});
       pintarRobo({ online: false, pid_vivo: false });
       await ligarPareamento();
@@ -1284,44 +1284,44 @@
 
   $("btnLigarAuto").addEventListener("click", async () => {
     const resposta = prompt(
-      "Ligar o robÃƒÂ´ em modo AUTOMÃƒÂTICO (envia sozinho, respeitando cota e intervalo)?\nDigite ENVIAR para confirmar."
+      "Ligar o robô em modo AUTOMÁTICO (envia sozinho, respeitando cota e intervalo)?\nDigite ENVIAR para confirmar."
     );
     if (resposta === null) return;
     if (resposta.trim().toUpperCase() !== "ENVIAR") {
-      toast("Cancelado: digite ENVIAR para ligar o automÃƒÂ¡tico.", true);
+      toast("Cancelado: digite ENVIAR para ligar o automático.", true);
       return;
     }
     await ligarRobo("enviar");
   });
 
   $("btnDesligarRobo").addEventListener("click", async () => {
-    if (!confirm("Desligar o robÃƒÂ´? O WhatsApp fica pareado para a prÃƒÂ³xima vez.")) return;
+    if (!confirm("Desligar o robô? O WhatsApp fica pareado para a próxima vez.")) return;
     autoRobo = false;
     localStorage.setItem(CHAVE_AUTO_ROBO, "0");
     try {
       const dados = await api("/campanha/worker/desligar", "POST", {});
-      toast(dados.pedido ? "Pedido de desligamento enviadoÃ¢â‚¬Â¦" : (dados.motivo || "Nada para desligar."));
+      toast(dados.pedido ? "Pedido de desligamento enviado…" : (dados.motivo || "Nada para desligar."));
       for (let i = 0; i < 6; i++) {
         await new Promise((resolver) => setTimeout(resolver, 3000));
         let atual;
         try { atual = await api("/campanha/worker"); } catch { continue; }
         pintarRobo(atual);
         if (!atual.online && !atual.pid_vivo) {
-          toast("RobÃƒÂ´ desligado.");
+          toast("Robô desligado.");
           await carregarSaude().catch(() => {});
           return;
         }
       }
       await api("/campanha/worker/desligar", "POST", { forcar: true });
       await carregarRobo().catch(() => {});
-      toast("O robÃƒÂ´ nÃƒÂ£o respondeu; encerrado ÃƒÂ  forÃƒÂ§a.");
+      toast("O robô não respondeu; encerrado à força.");
     } catch (erro) { toast(erro.message, true); }
   });
 
   $("chkAutoRobo").addEventListener("change", () => {
     autoRobo = $("chkAutoRobo").checked;
     localStorage.setItem(CHAVE_AUTO_ROBO, autoRobo ? "1" : "0");
-    toast(autoRobo ? "O painel vai ligar o robÃƒÂ´ sozinho ao abrir." : "O painel nÃƒÂ£o liga mais o robÃƒÂ´ sozinho.");
+    toast(autoRobo ? "O painel vai ligar o robô sozinho ao abrir." : "O painel não liga mais o robô sozinho.");
   });
 
   async function iniciarRoboSePreciso() {
@@ -1338,7 +1338,7 @@
   $("btnAtualizarSaude").addEventListener("click", async () => {
     try {
       await carregarSaude();
-      toast("SaÃƒÂºde atualizada.");
+      toast("Saúde atualizada.");
     } catch (erro) { toast(erro.message, true); }
   });
 
