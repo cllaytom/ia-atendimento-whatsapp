@@ -15,4 +15,12 @@ if (-not (Test-Path $banco)) {
 # Porta da API. Troque aqui ou defina a variavel de ambiente PORTA.
 $porta = if ($env:PORTA) { $env:PORTA } else { "8010" }
 
+# Robo do WhatsApp da campanha em janela separada
+$worker = Join-Path $PSScriptRoot "campanha-whatsapp\start.cmd"
+if (Test-Path $worker) {
+    Start-Process cmd.exe -ArgumentList "/k", "`"$worker`" --enviar"
+} else {
+    Write-Warning "Robo da campanha nao encontrado: $worker"
+}
+
 python -m uvicorn app.main:app --host 127.0.0.1 --port $porta --reload
