@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Conversa, Duvida, MensagemAtendimento, ResultadoAtendimento
+from ..models import Conversa, Duvida, MensagemAtendimento
 from ..security import verificar_api_key
 from . import (
     aplicativos,
     aprendizado,
     config,
     conhecimento,
-    historico,
     ia,
     motor,
     pausas,
@@ -24,7 +22,6 @@ from . import (
 from .schemas import (
     ConversaCriar,
     EntradaConhecimento,
-    HistoricoAnalise,
     MensagemCliente,
     RespostaDuvida,
     RespostaHumano,
@@ -169,223 +166,6 @@ def alertas(db: Session = Depends(get_db)):
 
 
 # ---------------------------------------------------------------------------
-# Indicadores comerciais
-# ---------------------------------------------------------------------------
-def _periodo(
-    periodo: str,
-    inicio: str | None,
-    fim: str | None,
-) -> tuple[datetime, datetime, str]:
-    hoje = datetime.now(timezone.utc).date()
-
-    if periodo == "hoje":
-        data_inicio = hoje
-        data_fim = hoje
-        rotulo = "Hoje"
-    elif periodo == "7d":
-        data_inicio = hoje - timedelta(days=6)
-        data_fim = hoje
-        rotulo = "Últimos 7 dias"
-    elif periodo == "mes":
-        data_inicio = hoje.replace(day=1)
-        data_fim = hoje
-        rotulo = "Este mês"
-    elif periodo == "personalizado":
-        if not inicio or not fim:
-            raise HTTPException(
-                status_code=400,
-                detail="Informe as datas inicio e fim para o periodo personalizado.",
-            )
-        try:
-            data_inicio = date.fromisoformat(inicio)
-            data_fim = date.fromisoformat(fim)
-        except ValueError as erro:
-            raise HTTPException(
-                status_code=400,
-                detail="Use datas no formato AAAA-MM-DD.",
-            ) from erro
-        if data_inicio > data_fim:
-            raise HTTPException(
-                status_code=400,
-                detail="A data inicial deve ser anterior ou igual à final.",
-            )
-        rotulo = "Período personalizado"
-    else:
-        raise HTTPException(status_code=400, detail="Periodo invalido.")
-
-    inicio_dt = datetime.combine(data_inicio, datetime.min.time(), tzinfo=timezone.utc)
-    fim_dt = datetime.combine(data_fim + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
-    return inicio_dt, fim_dt, rotulo
-
-
-def _resultado_dict(resultado: ResultadoAtendimento, conversa: Conversa | None = None) -> dict:
-    return {
-        "id": resultado.id,
-        "conversa_id": resultado.conversa_id,
-        "contato": resultado.contato,
-        "nome": conversa.nome if conversa else None,
-        "canal": conversa.canal if conversa else None,
-        "tipo": resultado.tipo,
-        "status": resultado.status,
-        "origem": resultado.origem,
-        "observacao": resultado.observacao,
-        "criado_em": _iso(resultado.criado_em),
-    }
-
-
-@router.get("/indicadores", summary="Indicadores comerciais do atendimento")
-def indicadores(
-    periodo: str = Query(default="hoje"),
-    inicio: str | None = Query(default=None),
-    fim: str | None = Query(default=None),
-    db: Session = Depends(get_db),
-):
-    inicio_dt, fim_dt, rotulo = _periodo(periodo, inicio, fim)
-
-    contatos_unicos = db.scalar(
-        select(func.count(func.distinct(Conversa.contato))).where(
-            Conversa.canal != "simulador",
-            Conversa.ultima_mensagem_em >= inicio_dt,
-            Conversa.ultima_mensagem_em < fim_dt,
-        )
-    ) or 0
-
-    contratacoes = db.scalar(
-        select(func.count(ResultadoAtendimento.id)).where(
-            ResultadoAtendimento.tipo == "contratacao",
-            ResultadoAtendimento.status == "confirmado",
-            ResultadoAtendimento.criado_em >= inicio_dt,
-            ResultadoAtendimento.criado_em < fim_dt,
-            Conversa.canal != "simulador",
-        ).join(Conversa, ResultadoAtendimento.conversa_id == Conversa.id, isouter=True)
-    ) or 0
-
-    renovacoes = db.scalar(
-        select(func.count(ResultadoAtendimento.id)).where(
-            ResultadoAtendimento.tipo == "renovacao",
-            ResultadoAtendimento.status == "confirmado",
-            ResultadoAtendimento.criado_em >= inicio_dt,
-            ResultadoAtendimento.criado_em < fim_dt,
-            Conversa.canal != "simulador",
-        ).join(Conversa, ResultadoAtendimento.conversa_id == Conversa.id, isouter=True)
-    ) or 0
-
-    resultados = db.execute(
-        select(ResultadoAtendimento, Conversa)
-        .join(Conversa, ResultadoAtendimento.conversa_id == Conversa.id, isouter=True)
-        .where(
-            ResultadoAtendimento.status == "confirmado",
-            ResultadoAtendimento.criado_em >= inicio_dt,
-            ResultadoAtendimento.criado_em < fim_dt,
-            Conversa.canal != "simulador",
-        )
-        .order_by(ResultadoAtendimento.criado_em.desc())
-    ).all()
-
-    return {
-        "periodo": periodo,
-        "rotulo": rotulo,
-        "inicio": _iso(inicio_dt),
-        "fim": _iso(fim_dt),
-        "contatos_unicos": contatos_unicos,
-        "contratacoes_confirmadas": contratacoes,
-        "renovacoes_confirmadas": renovacoes,
-        "total_resultados": contratacoes + renovacoes,
-        "itens": [
-            _resultado_dict(resultado, conversa)
-            for resultado, conversa in resultados
-        ],
-    }
-
-
-class ResultadoCriar(BaseModel):
-    conversa_id: int
-    tipo: str
-    observacao: str | None = None
-
-
-@router.post("/resultados", summary="Registrar contratacao ou renovacao confirmada", status_code=201)
-def registrar_resultado(payload: ResultadoCriar, db: Session = Depends(get_db)):
-    tipo = payload.tipo.strip().lower()
-    if tipo not in {"contratacao", "renovacao"}:
-        raise HTTPException(
-            status_code=400,
-            detail="Tipo deve ser contratacao ou renovacao.",
-        )
-
-    conversa = _buscar(db, payload.conversa_id)
-    if conversa.canal == "simulador":
-        raise HTTPException(
-            status_code=400,
-            detail="Conversas do simulador nao entram nos indicadores.",
-        )
-
-    existente = db.scalar(
-        select(ResultadoAtendimento).where(
-            ResultadoAtendimento.conversa_id == conversa.id,
-            ResultadoAtendimento.tipo == tipo,
-            ResultadoAtendimento.status == "confirmado",
-        )
-    )
-    if existente:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Este contato ja possui {tipo} confirmada neste periodo.",
-        )
-
-    resultado = ResultadoAtendimento(
-        conversa_id=conversa.id,
-        contato=conversa.contato,
-        tipo=tipo,
-        status="confirmado",
-        origem="manual",
-        observacao=(payload.observacao or "").strip() or None,
-    )
-    db.add(resultado)
-    db.commit()
-    db.refresh(resultado)
-    return _resultado_dict(resultado, conversa)
-
-
-@router.get("/resultados", summary="Listar resultados confirmados")
-def listar_resultados(
-    periodo: str = Query(default="hoje"),
-    inicio: str | None = Query(default=None),
-    fim: str | None = Query(default=None),
-    db: Session = Depends(get_db),
-):
-    inicio_dt, fim_dt, _ = _periodo(periodo, inicio, fim)
-    resultados = db.execute(
-        select(ResultadoAtendimento, Conversa)
-        .join(Conversa, ResultadoAtendimento.conversa_id == Conversa.id, isouter=True)
-        .where(
-            ResultadoAtendimento.status == "confirmado",
-            ResultadoAtendimento.criado_em >= inicio_dt,
-            ResultadoAtendimento.criado_em < fim_dt,
-            Conversa.canal != "simulador",
-        )
-        .order_by(ResultadoAtendimento.criado_em.desc())
-    ).all()
-    return {
-        "itens": [
-            _resultado_dict(resultado, conversa)
-            for resultado, conversa in resultados
-        ],
-        "total": len(resultados),
-    }
-
-
-@router.delete("/resultados/{resultado_id}", summary="Remover um resultado confirmado")
-def remover_resultado(resultado_id: int, db: Session = Depends(get_db)):
-    resultado = db.get(ResultadoAtendimento, resultado_id)
-    if not resultado:
-        raise HTTPException(status_code=404, detail="Resultado nao encontrado.")
-    db.delete(resultado)
-    db.commit()
-    return {"removido": True}
-
-
-# ---------------------------------------------------------------------------
 # Aprendizado: duvidas nao respondidas -> base de conhecimento
 # ---------------------------------------------------------------------------
 def _duvida_dict(db: Session, duvida: Duvida) -> dict:
@@ -432,16 +212,12 @@ def responder_duvida(
     if duvida.status != "pendente":
         raise HTTPException(status_code=409, detail="Duvida ja respondida.")
     try:
-        duvida, enviado = aprendizado.responder(
-            db,
-            duvida,
-            payload.resposta,
-            salvar_na_base=payload.salvar_na_base,
-            enviar_ao_cliente=payload.enviar_ao_cliente,
+        aprendizado.responder(
+            db, duvida, payload.resposta, payload.salvar_na_base
         )
     except ValueError as erro:
         raise HTTPException(status_code=400, detail=str(erro)) from erro
-    return {**_duvida_dict(db, duvida), "enviado_ao_cliente": enviado}
+    return _duvida_dict(db, duvida)
 
 
 @router.post("/duvidas/{duvida_id}/ignorar", summary="Ignorar uma duvida")
@@ -486,21 +262,6 @@ def remover_conhecimento(indice: int):
     if not conhecimento.remover(indice):
         raise HTTPException(status_code=404, detail="Entrada nao encontrada.")
     return {"removido": True}
-
-
-@router.post(
-    "/historico/analisar",
-    summary="Ler um historico do WhatsApp e sugerir perguntas e respostas",
-)
-def analisar_historico(payload: HistoricoAnalise):
-    """Extrai pares pergunta/resposta do arquivo .txt exportado do WhatsApp.
-
-    A resposta e uma lista de candidatos. O atendente revisa, marca os bons e
-    salva na base de conhecimento pelo endpoint /atendimento/conhecimento.
-    """
-    return historico.analisar(
-        payload.texto, negocio=payload.negocio, limite=payload.limite
-    )
 
 
 @router.post("/conversas", summary="Iniciar conversa no simulador", status_code=201)

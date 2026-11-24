@@ -63,12 +63,7 @@ def responder(
     duvida: Duvida,
     resposta: str,
     salvar_na_base: bool = True,
-    enviar_ao_cliente: bool = False,
-) -> tuple[Duvida, bool]:
-    """Responde a duvida, opcionalmente ensina a base e envia ao cliente.
-
-    Retorna a duvida e se a resposta foi realmente enviada na conversa.
-    """
+) -> Duvida:
     texto = (resposta or "").strip()
     if not texto:
         raise ValueError("Informe a resposta.")
@@ -81,20 +76,9 @@ def responder(
     if salvar_na_base:
         conhecimento.adicionar(duvida.pergunta, texto)
 
-    enviado = False
-    if enviar_ao_cliente and duvida.conversa_id:
-        # Import local para evitar dependencia circular (motor usa aprendizado).
-        from ..models import Conversa
-        from . import motor
-
-        conversa = db.get(Conversa, duvida.conversa_id)
-        if conversa and conversa.estado != motor.ESTADO_ENCERRADA:
-            motor.responder_humano(db, conversa, texto, assumir_ia=True)
-            enviado = True
-
     db.commit()
     db.refresh(duvida)
-    return duvida, enviado
+    return duvida
 
 
 def ignorar(db: Session, duvida: Duvida) -> Duvida:

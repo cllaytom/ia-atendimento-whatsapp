@@ -9,17 +9,13 @@ try:  # carrega .env local, se existir
     load_dotenv(BASE_DIR / ".env")
 except ImportError:  # pragma: no cover
     pass
-
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "dados"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-# Banco proprio do atendimento (conversas, mensagens, duvidas e eventos).
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", f"sqlite:///{(DATA_DIR / 'atendimento.db').as_posix()}"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{(DATA_DIR / 'assinaturas.db').as_posix()}")
 
-# Chave exigida no header X-API-Key. Troque em producao.
+# Chave exigida no header X-API-Key. Troque em producao (variavel de ambiente API_KEY).
 API_KEY = os.getenv("API_KEY", "dev-local-troque-esta-chave")
 
-APP_NAME = "Atendimento IA - ConnectTV"
-APP_VERSION = "0.1.0"
+APP_NAME = "API de Assinaturas e Atendimento"
+APP_VERSION = "0.2.0"

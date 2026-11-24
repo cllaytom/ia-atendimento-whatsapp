@@ -4,13 +4,14 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 from .atendimento import config as atendimento_config
 from .atendimento import router as atendimento
-from .atendimento import router_whatsapp, motor, segmentos, suporte_v2
+from .campanha import router as campanha
 from .config import API_KEY, APP_NAME, APP_VERSION, BASE_DIR
 from .database import Base, engine
+from .routers import admin, assinaturas, planos, relatorios
 
 logger = logging.getLogger("api")
 
@@ -18,23 +19,37 @@ logger = logging.getLogger("api")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     Base.metadata.create_all(bind=engine)
-    suporte_v2.inicializar()
     if API_KEY == "dev-local-troque-esta-chave":
         logger.warning("API_KEY padrao em uso. Defina a variavel de ambiente API_KEY.")
     if not atendimento_config.LINK_APP_ANDROID:
-        logger.warning("LINK_APP_ANDROID nao configurado: o agente pedira que o atendente envie o link da Play Store.")
+        logger.warning(
+            "LINK_APP_ANDROID nao configurado: o agente pedira que o atendente "
+            "envie o link da Play Store."
+        )
     if not atendimento_config.ia_ativa():
-        logger.info("IA externa desativada. O atendimento funcionara no modo roteirizado.")
+        logger.info(
+            "IA externa desativada. O atendimento funcionara no modo roteirizado."
+        )
     yield
 
 
-app = FastAPI(title=APP_NAME, version=APP_VERSION, lifespan=lifespan, description="Atendimento automatico da ConnectTV. Autentique com o header X-API-Key.")
+app = FastAPI(
+    title=APP_NAME,
+    version=APP_VERSION,
+    lifespan=lifespan,
+    description=(
+        "API para um agente de IA gerenciar a base de assinaturas: clientes, planos, "
+        "vencimentos, renovacoes, pagamentos e despesas.\n\n"
+        "Autentique com o header **X-API-Key**."
+    ),
+)
+
+app.include_router(assinaturas.router)
+app.include_router(planos.router)
+app.include_router(relatorios.router)
+app.include_router(admin.router)
 app.include_router(atendimento.router)
-app.include_router(router_whatsapp.router)
-app.include_router(segmentos.router)
-app.include_router(suporte_v2.router)
-# Adaptador compartilhado pelo simulador e pela ponte WhatsApp.
-motor.tratar_texto = segmentos.integrar(motor.tratar_texto)
+app.include_router(campanha.router)
 
 
 @app.get("/health", tags=["sistema"], summary="Verificacao de saude")
@@ -44,42 +59,19 @@ def health():
 
 @app.get("/", include_in_schema=False)
 def raiz():
-    return RedirectResponse("/atendimento")
+    return RedirectResponse("/painel")
+
+
+@app.get("/painel", include_in_schema=False)
+def painel():
+    return FileResponse(BASE_DIR / "web" / "painel.html")
 
 
 @app.get("/atendimento", include_in_schema=False)
 def atendimento_visual():
-    pagina = (BASE_DIR / "web" / "atendimento.html").read_text(encoding="utf-8")
-    pagina = pagina.replace('<div class="acoes">', '<div class="acoes"><a class="botao" href="/indicadores">Indicadores</a>', 1)
-    pagina = pagina.replace("</body>", '<script src="/ensino-chat.js?v=1"></script><script src="/segmentos.js?v=1"></script><script src="/revisao-suporte.js?v=1"></script></body>')
-    return HTMLResponse(pagina, headers={"Cache-Control": "no-store"})
+    return FileResponse(BASE_DIR / "web" / "atendimento.html")
 
 
-@app.get("/ensino-chat.js", include_in_schema=False)
-def ensino_chat_script():
-    return FileResponse(BASE_DIR / "web" / "ensino-chat.js", media_type="text/javascript", headers={"Cache-Control": "no-store"})
-
-
-@app.get("/segmentos.js", include_in_schema=False)
-def segmentos_script():
-    return FileResponse(BASE_DIR / "web" / "segmentos.js", media_type="text/javascript", headers={"Cache-Control": "no-store"})
-
-
-@app.get("/treinamento", include_in_schema=False)
-def treinamento_visual():
-    return FileResponse(BASE_DIR / "web" / "treinamento.html")
-
-
-@app.get("/painel", include_in_schema=False)
-def painel_antigo():
-    return RedirectResponse("/atendimento")
-
-
-@app.get("/revisao-suporte.js", include_in_schema=False)
-def revisao_suporte_script():
-    return FileResponse(BASE_DIR / "web" / "revisao-suporte.js", media_type="text/javascript", headers={"Cache-Control": "no-store"})
-
-
-@app.get("/indicadores", include_in_schema=False)
-def indicadores_visual():
-    return FileResponse(BASE_DIR / "web" / "indicadores.html", headers={"Cache-Control": "no-store"})
+@app.get("/campanha", include_in_schema=False)
+def campanha_visual():
+    return FileResponse(BASE_DIR / "web" / "campanha.html")

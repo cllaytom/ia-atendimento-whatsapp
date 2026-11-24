@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import logging
 import re
-import os
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import Conversa, MensagemAtendimento, agora
 from . import aplicativos, aprendizado, config, conhecimento, ia, oferta
-from .testes_ssh import criar_teste, pode_criar
 from .alertas import notificar
 from .texto import (
     extrair_operadora,
@@ -112,26 +110,6 @@ def _detectar_marca(texto_normalizado: str) -> str | None:
 
 
 def quer_contratar(texto: str) -> bool:
-    texto = normalizar(texto)
-    if re.search(r"\bnao\b.{0,35}\b(?:quero|contratar|comprar|assinar|ativar)\b", texto):
-        return False
-    if re.search(
-        r"(posso pagar|pago|pagamento|pagar).{0,40}"
-        r"(depois|mes que vem|mes seguinte|proximo mes|um mes|apos|após)",
-        texto,
-    ):
-        return False
-
-    if tem(
-        texto,
-        "quando eu pago",
-        "quando pago",
-        "como faco o pagamento",
-        "como faço o pagamento",
-        "forma de pagamento",
-    ):
-        return False
-
     return tem(
         texto,
         "contratar",
@@ -234,12 +212,12 @@ def montar_resumo(conversa: Conversa) -> str:
             app_info = _sim_nao(dados.get("app_instalado"))
         linhas.extend(
             [
-                f"ServiÃ§o: {oferta.nome_plano('internet')}",
+                f"Serviço: {oferta.nome_plano('internet')}",
                 f"Valores: {oferta.resumo_valores('internet')}",
                 f"Operadora: {dados.get('operadora') or 'não informada'}",
-                f"Recarga nos Ãºltimos 3 meses: {_sim_nao(dados.get('recarga'))}",
+                f"Recarga nos últimos 3 meses: {_sim_nao(dados.get('recarga'))}",
                 f"Aplicativo instalado: {app_info}",
-                f"Teste grÃ¡tis de 4h: {_sim_nao(dados.get('teste'))}",
+                f"Teste grátis de 4h: {_sim_nao(dados.get('teste'))}",
                 "Aparelho: Android",
             ]
         )
@@ -247,7 +225,7 @@ def montar_resumo(conversa: Conversa) -> str:
         plano = dados.get("plano_iptv")
         linhas.extend(
             [
-                f"ServiÃ§o: {oferta.nome_plano(plano)}",
+                f"Serviço: {oferta.nome_plano(plano)}",
                 f"Valores: {oferta.resumo_valores(plano)}",
                 f"Marca da TV: {dados.get('marca_tv') or 'não informada'}",
                 f"TV Smart: {_sim_nao(dados.get('smart'))}",
@@ -284,7 +262,7 @@ def transferir(
             db,
             conversa,
             "sistema",
-            f"ðŸ”” Transferido para atendimento humano\n"
+            f"🔔 Transferido para atendimento humano\n"
             f"Motivo: {motivo}\n\n{conversa.resumo}",
         )
     )
@@ -312,70 +290,6 @@ def criar_conversa(
     db.commit()
     db.refresh(conversa)
     return conversa
-
-
-def _controle_cliente(db, conversa, texto):
-    """Separa encerramento comum de recusa de contato nesta conversa."""
-    t = re.sub(r"[^a-z0-9 ]", " ", normalizar(texto).replace("+", " mais "))
-    t = " ".join(t.split())
-    dados = dict(conversa.dados or {})
-    optout = bool(re.search(
-        r"\b(?:nao (?:me )?(?:mande|envie|manda|envia)(?: mais)? mensage(?:m|ns)|"
-        r"pare de (?:me )?(?:mandar|enviar) mensage(?:m|ns)|nao me contate)\b", t
-    ))
-    retomar = t in {
-        "menu", "reiniciar", "retomar atendimento", "quero retomar o atendimento",
-        "pode voltar a responder", "pode me responder", "autorizo novas mensagens",
-    }
-    if dados.get("ctv_recusa_contato") and not optout:
-        if not retomar:
-            return []
-        dados.update(ctv_recusa_contato=False, ctv_pausa_cliente=False,
-                     ctv_atendimento_finalizado=False, quer_contratar=False)
-        conversa.dados = dados
-        conversa.etapa = MENU
-        return [_msg(db, conversa, "ia", oferta.boas_vindas())]
-    encerrar = t in {
-        "pode encerrar", "encerrar", "encerre", "encerra", "cancele", "cancela",
-        "cancelar", "pare", "parar", "pode parar", "fim", "tchau", "ate mais",
-        "pode encerrar por favor", "encerre por favor",
-    }
-    recusa = bool(re.search(
-        r"\b(?:nao (?:quero|desejo)(?: mais)? "
-        r"(?:servico|servicos|nada|contratar|comprar|assinar|escolher)|"
-        r"nao tenho interesse|sem interesse|desisti)\b", t
-    ))
-    conversar = bool(re.search(
-        r"\b(?:quero|queria|gostaria de) (?:so |apenas )?(?:conversar|bater papo)\b", t
-    ))
-    if optout or encerrar or recusa or conversar:
-        for chave in (
-            "servico", "plano_iptv", "operadora", "recarga", "app_instalado",
-            "marca_tv", "smart", "foto_loja", "foto_contexto", "usa_tvbox",
-            "tvbox_modelo", "app_indicado",
-        ):
-            dados.pop(chave, None)
-        dados.update(quer_contratar=False, teste=False, ctv_pausa_cliente=False,
-                     ctv_atendimento_finalizado=bool(encerrar))
-        if optout:
-            dados["ctv_recusa_contato"] = True
-        conversa.dados = dados
-        conversa.etapa = MENU
-        if optout:
-            resposta = "Entendido. Vou parar as respostas automáticas nesta conversa."
-        elif encerrar:
-            resposta = "Tudo bem, atendimento finalizado. Quando precisar, é só chamar."
-        elif recusa:
-            resposta = "Tudo bem. Não vou continuar a oferta."
-        else:
-            resposta = "Claro, podemos conversar sem contratar nada. Sobre o que você quer falar?"
-        return [_msg(db, conversa, "ia", resposta)]
-    if dados.get("ctv_atendimento_finalizado") or dados.get("ctv_pausa_cliente"):
-        dados.update(ctv_atendimento_finalizado=False, ctv_pausa_cliente=False,
-                     quer_contratar=False)
-        conversa.dados = dados
-        conversa.etapa = MENU
-    return None
 
 
 def processar_mensagem_cliente(
@@ -409,14 +323,6 @@ def processar_mensagem_cliente(
         db.commit()
         return []
 
-    controle = _controle_cliente(db, conversa, texto) if texto else None
-    if controle is not None:
-        db.commit()
-        return controle
-    if (conversa.dados or {}).get("ctv_recusa_contato"):
-        db.commit()
-        return []
-
     if imagem:
         novas = tratar_imagem(db, conversa, imagem, texto)
     else:
@@ -440,20 +346,9 @@ def assumir_conversa(db: Session, conversa: Conversa) -> None:
     db.commit()
 
 
-def responder_humano(
-    db: Session,
-    conversa: Conversa,
-    texto: str,
-    assumir_ia: bool = False,
-) -> MensagemAtendimento:
+def responder_humano(db: Session, conversa: Conversa, texto: str) -> MensagemAtendimento:
     if conversa.estado == ESTADO_ENCERRADA:
         raise ValueError("Conversa encerrada.")
-    # Resposta pontual do time sem tirar a conversa da IA (ex.: resposta de uma
-    # duvida no painel de aprendizado).
-    if assumir_ia and conversa.estado == ESTADO_IA:
-        mensagem = _msg(db, conversa, "humano", texto)
-        db.commit()
-        return mensagem
     if conversa.estado == ESTADO_AGUARDANDO:
         conversa.estado = ESTADO_HUMANO
         _msg(
@@ -509,56 +404,6 @@ def tratar_texto(db: Session, conversa: Conversa, texto: str) -> list[MensagemAt
             "Cliente pediu atendimento humano",
             aviso=oferta.MSG_TRANSFERENCIA_PEDIDO,
         )
-    if tem(
-        texto_normalizado,
-        "ja paguei",
-        "ja fiz o pix",
-        "fiz o pix",
-        "paguei",
-        "ta pago",
-        "esta pago",
-        "pagamento feito",
-        "pagamento realizado",
-        "pix enviado",
-        "pix feito",
-    ) and not tem(
-        texto_normalizado,
-        "nao paguei",
-        "nao fiz o pix",
-        "nao esta pago",
-        "nao ta pago",
-        "ainda nao",
-    ):
-        return transferir(
-            db,
-            conversa,
-            "Cliente informa pagamento realizado; conferir recebimento e acesso",
-            aviso=(
-                "Vou encaminhar seu atendimento para a equipe "
-                "conferir o pagamento e verificar seu acesso."
-            ),
-        )
-    if (
-        tem(texto_normalizado, "pagar", "pago", "pagamento")
-        and tem(
-            texto_normalizado,
-            "quando",
-            "depois",
-            "agora",
-            "mes que vem",
-            "proximo mes",
-            "mes seguinte",
-        )
-    ):
-        return [
-            _msg(
-                db,
-                conversa,
-                "ia",
-                "O pagamento é feito antes de usar o período contratado, "
-                "não depois de um mês de uso.",
-            )
-        ]
 
     if quer_contratar(texto_normalizado):
         _atualizar_dados(conversa, quer_contratar=True)
@@ -567,18 +412,15 @@ def tratar_texto(db: Session, conversa: Conversa, texto: str) -> list[MensagemAt
         texto_normalizado, "iptv"
     ):
         pergunta_simples = parece_pergunta(texto_normalizado) and not tem(
-            texto_normalizado, "quero", "queria", "ativar", "liberar", "manda", "mandar"
+            texto_normalizado, "quero", "ativar", "liberar"
         )
         if not pergunta_simples:
             _atualizar_dados(conversa, teste=True)
-            return iniciar_internet(db, conversa, texto, teste=True, contratar=True)
-            return iniciar_internet(db, conversa, texto, teste=True, contratar=True)
 
     if conversa.etapa == MENU:
         return tratar_menu(db, conversa, texto_normalizado)
 
     tratadores = {
-        MENU: lambda db, conversa, normalizado, original: tratar_menu(db, conversa, normalizado),
         INTERNET_OPERADORA: tratar_internet_operadora,
         INTERNET_RECARGA: tratar_internet_recarga,
         INTERNET_APP: tratar_internet_app,
@@ -619,94 +461,6 @@ def _apenas_saudacao(texto: str) -> bool:
     return bool(palavras) and len(palavras) <= 5 and set(palavras) <= saudacoes
 
 
-# Sinais de que o cliente esta respondendo a uma pergunta do atendimento
-# (operadora, recarga, Android, TV, TV Box...) e nao pedindo um novo servico.
-SINAIS_DE_RESPOSTA = (
-    "vivo",
-    "tim",
-    "claro",
-    "oi",
-    "recarga",
-    "recarreguei",
-    "android",
-    "celular",
-    "aparelho",
-    "smart",
-    "smartv",
-    "tv",
-    "televisao",
-    "televisor",
-    "samsung",
-    "lg",
-    "tcl",
-    "philips",
-    "roku",
-    "tvbox",
-    "box",
-    "modelo",
-    "instalei",
-    "instalado",
-    "baixei",
-    "tenho sim",
-    "uso sim",
-    "nao tenho",
-    "fiz",
-    "mes passado",
-    "sim",
-    "nao",
-    "talvez",
-    "claro que sim",
-    "isso",
-    "correto",
-    "exato",
-    "ok",
-    "pode ser",
-)
-
-
-def _parece_resposta(texto: str) -> bool:
-    return tem(texto, *SINAIS_DE_RESPOSTA)
-
-
-def _contexto_do_cliente(
-    db: Session, conversa: Conversa, texto: str
-) -> list[MensagemAtendimento]:
-    """Responde perguntas que misturam informacao do cliente com o catalogo.
-
-    Exemplo: "meu chip e vivo, fiz recarga mes passado". A base responderia so
-    sobre a recarga; aqui a resposta e escrita a partir das mensagens do proprio
-    cliente, sem inventar nada, e o atendimento segue para a proxima pergunta.
-    """
-    partes: list[str] = []
-    normalizado = normalizar(texto)
-
-    if tem(normalizado, "recarga", "recarreguei", "mes passado", "mes retrasado"):
-        partes.append(
-            "Sobre a *recarga*: ela precisa ter sido feita nos últimos 3 meses "
-            "para o chip ficar ativo."
-        )
-    if tem(normalizado, "vivo", "tim"):
-        partes.append("Anotei aqui a informação do seu chip. 👍")
-    elif tem(normalizado, "claro", "oi"):
-        partes.append(
-            "Trabalhamos com chips *TIM* e *Vivo*. Com outra operadora a ativação "
-            "não funciona."
-        )
-    if tem(normalizado, "android"):
-        partes.append("Perfeito, o Android é o sistema que funciona no nosso serviço.")
-    if tem(normalizado, "smart", "smartv", "samsung", "lg", "tcl", "philips"):
-        partes.append("Ótimo, Smart TV é o que precisamos para o IPTV. 📺")
-
-    if not partes:
-        return []
-
-    mensagens = [_msg(db, conversa, "ia", "\n".join(partes))]
-    pergunta = pergunta_da_etapa(conversa)
-    if pergunta:
-        mensagens.append(_msg(db, conversa, "ia", pergunta))
-    return mensagens
-
-
 def tratar_menu(
     db: Session, conversa: Conversa, texto: str
 ) -> list[MensagemAtendimento]:
@@ -736,62 +490,9 @@ def tratar_menu(
                 ),
                 _msg(db, conversa, "ia", oferta.planos_iptv()),
             ]
-        if parece_pergunta(texto) and not tem(texto, "quero", "queria", "ativar", "liberar", "manda", "mandar"):
+        if parece_pergunta(texto) and not tem(texto, "quero", "ativar", "liberar"):
             return [_msg(db, conversa, "ia", oferta.faq_teste())]
-        if not pode_criar(conversa.contato):
-            return transferir(
-                db,
-                conversa,
-                "Cliente solicitou outro teste antes do intervalo de 48 horas",
-                aviso=(
-                    "Para solicitar um novo teste, vou encaminhar você "
-                    "para o atendimento humano."
-                ),
-            )
-
-        import os as _os; resultado = criar_teste(conversa.contato, _os.environ.get("LINKSSH_TOKEN", ""))
-
-        if not resultado.get("ok"):
-            return transferir(
-                db,
-                conversa,
-                "Falha ao criar teste SSH",
-                aviso=(
-                    "Não consegui criar seu teste agora. "
-                    "Vou encaminhar você para o atendimento humano."
-                ),
-            )
-
-        _atualizar_dados(
-            conversa,
-            teste=True,
-            teste_ssh_login=resultado["login"],
-            teste_ssh_expira=resultado["expira"],
-        )
-
-        return [
-            _msg(
-                db,
-                conversa,
-                "ia",
-                (
-                    "Seu teste SSH de 3 horas foi criado.\n\n"
-                    f"Login: {resultado['login']}\n"
-                    f"Senha: {resultado['senha']}\n"
-                    f"Validade: {resultado['expira']}\n\n"
-                    "Use esses dados no aplicativo para conectar."
-                ),
-            )
-        ]
-    # O cliente esta respondendo algo do atendimento ("meu chip e vivo",
-    # "uso android") em vez de pedir um servico: responde com base no que ele
-    # mesmo disse e retoma a pergunta da etapa, sem reiniciar o menu.
-    if _parece_resposta(texto) and not tem(
-        texto, "quero", "queria", "contratar", "ativar", "assinar"
-    ) and not parece_pergunta(texto):
-        respondidas = _contexto_do_cliente(db, conversa, texto)
-        if respondidas:
-            return respondidas
+        return iniciar_internet(db, conversa, texto, teste=True, contratar=True)
 
     faq = oferta.buscar_faq(texto)
     if faq and (
@@ -818,12 +519,6 @@ def tratar_menu(
     if texto.strip() == "1" or (tem(texto, "internet") and not tem(texto, "iptv")):
         if parece_pergunta(texto) and not quer_contratar(texto) and not tem(
             texto, "quero", "queria", "ativar", "contratar"
-        ):
-            return responder_generico(db, conversa, texto)
-        # "nao consigo conectar a internet" e duvida/suporte, nao pedido de
-        # contratacao: responde pela base em vez de comecar o fluxo do zero.
-        if _parece_resposta(texto) and tem(
-            texto, "nao conecta", "conectando", "conectar", "sem internet", "nao funciona"
         ):
             return responder_generico(db, conversa, texto)
         return iniciar_internet(
@@ -884,34 +579,6 @@ def _registrar_duvida(db: Session, conversa: Conversa, texto: str) -> None:
     aprendizado.registrar(db, conversa, texto)
 
 
-MSG_DUVIDA = (
-    "Boa pergunta! 🤔 Vou confirmar essa informação com a equipe e já te "
-    "respondo por aqui."
-)
-
-
-def _duvida_sem_resposta(
-    db: Session, conversa: Conversa, texto: str
-) -> list[MensagemAtendimento]:
-    """Registra a duvida e decide entre transferir ou continuar com a IA.
-
-    Com `ATENDIMENTO_TRANSFERIR_DUVIDA=0` (padrao), o cliente recebe um aviso
-    gentil, a pergunta entra na fila de Duvidas e a conversa continua ativa.
-    Assim uma pergunta simples nao joga o cliente direto para o humano.
-    """
-    _registrar_duvida(db, conversa, texto)
-    if config.TRANSFERIR_DUVIDA:
-        return transferir(db, conversa, "Dúvida fora do catálogo")
-
-    mensagens = [_msg(db, conversa, "ia", MSG_DUVIDA)]
-    pergunta = pergunta_da_etapa(conversa)
-    if pergunta and conversa.etapa != MENU:
-        mensagens.append(_msg(db, conversa, "ia", pergunta))
-    elif conversa.etapa == MENU:
-        mensagens.append(_msg(db, conversa, "ia", oferta.menu_curto()))
-    return mensagens
-
-
 def responder_generico(
     db: Session, conversa: Conversa, texto: str
 ) -> list[MensagemAtendimento]:
@@ -926,14 +593,7 @@ def responder_generico(
     # A base so responde assuntos do produto vendido (internet + IPTV).
     aprendido = conhecimento.buscar(texto) if conhecimento.parece_produto(texto) else None
     if aprendido:
-        # Quando a mensagem traz informacao do cliente (operadora, recarga,
-        # Android, TV...), a resposta da base vem primeiro e o atendimento
-        # continua na pergunta da etapa, sem voltar ao menu.
         mensagens = [_msg(db, conversa, "ia", aprendido["resposta"])]
-        if _parece_resposta(texto) and conversa.etapa == MENU:
-            contexto = _contexto_do_cliente(db, conversa, texto)
-            if contexto:
-                mensagens.extend(contexto)
         pergunta = pergunta_da_etapa(conversa)
         if pergunta and conversa.etapa != MENU:
             mensagens.append(_msg(db, conversa, "ia", pergunta))
@@ -941,29 +601,36 @@ def responder_generico(
 
     resposta = ia.responder(_historico(db, conversa), conversa.etapa, conversa.dados or {})
     if resposta:
-        if resposta.transferir:
-            if config.TRANSFERIR_DUVIDA:
-                _registrar_duvida(db, conversa, texto)
-                return transferir(
-                    db, conversa, "Atendimento humano solicitado pela IA"
-                )
-            return _duvida_sem_resposta(db, conversa, texto)
+        mensagens: list[MensagemAtendimento] = []
         if resposta.texto:
-            return [_msg(db, conversa, "ia", resposta.texto)]
-        return []
+            mensagens.append(_msg(db, conversa, "ia", resposta.texto))
+        if resposta.transferir:
+            _registrar_duvida(db, conversa, texto)
+            mensagens.extend(
+                transferir(
+                    db,
+                    conversa,
+                    "Atendimento humano solicitado pela IA",
+                    aviso="" if resposta.texto else None,
+                )
+            )
+        return mensagens
 
     pergunta = pergunta_da_etapa(conversa)
     if conversa.etapa == MENU:
         if parece_pergunta(texto) or len(texto) > 35:
-            return _duvida_sem_resposta(db, conversa, texto)
+            _registrar_duvida(db, conversa, texto)
+            return transferir(db, conversa, "Dúvida fora do catálogo")
         return [_msg(db, conversa, "ia", oferta.menu_curto())]
 
     if pergunta:
         if parece_pergunta(texto):
-            return _duvida_sem_resposta(db, conversa, texto)
+            _registrar_duvida(db, conversa, texto)
+            return transferir(db, conversa, "Dúvida fora do catálogo")
         return [_msg(db, conversa, "ia", "Não entendi 🤔 " + pergunta)]
 
-    return _duvida_sem_resposta(db, conversa, texto)
+    _registrar_duvida(db, conversa, texto)
+    return transferir(db, conversa, "Dúvida fora do catálogo")
 
 
 # ---------------------------------------------------------------------------
@@ -1024,7 +691,7 @@ def tratar_internet_operadora(
     _atualizar_dados(conversa, operadora=operadora)
     conversa.etapa = INTERNET_RECARGA
     return [
-        _msg(db, conversa, "ia", f"Ã“timo, chip *{operadora}*! âœ…"),
+        _msg(db, conversa, "ia", f"Ótimo, chip *{operadora}*! ✅"),
         _msg(db, conversa, "ia", oferta.pergunta_recarga()),
     ]
 
@@ -1086,7 +753,7 @@ def tratar_internet_app(
         texto
     ) is True:
         _atualizar_dados(conversa, app_instalado=True)
-        if (conversa.dados or {}).get("quer_contratar") and not (conversa.dados or {}).get("teste"):
+        if (conversa.dados or {}).get("quer_contratar"):
             return transferir(db, conversa, _motivo_internet(conversa))
         conversa.etapa = INTERNET_CONFIRMAR
         return [_msg(db, conversa, "ia", oferta.confirmar_internet())]
@@ -1111,55 +778,6 @@ def tratar_internet_confirmar(
 
     confirmou = resposta_sim_nao(texto)
     if confirmou is True or quer_contratar(texto):
-        if (conversa.dados or {}).get("teste"):
-            if not pode_criar(conversa.contato):
-                return transferir(
-                    db,
-                    conversa,
-                    "Cliente solicitou outro teste antes do intervalo de 48 horas",
-                    aviso=(
-                        "Para solicitar um novo teste, vou encaminhar você "
-                        "para o atendimento humano."
-                    ),
-                )
-
-            resultado = criar_teste(
-                conversa.contato,
-                os.environ.get("LINKSSH_TOKEN", ""),
-            )
-
-            if not resultado.get("ok"):
-                return transferir(
-                    db,
-                    conversa,
-                    "Falha ao criar teste SSH: " + str(resultado.get("erro")),
-                    aviso=(
-                        "Não consegui criar seu teste agora. "
-                        "Vou encaminhar você para o atendimento humano."
-                    ),
-                )
-
-            _atualizar_dados(
-                conversa,
-                teste_ssh_login=resultado["login"],
-                teste_ssh_expira=resultado["expira"],
-            )
-
-            return [
-                _msg(
-                    db,
-                    conversa,
-                    "ia",
-                    (
-                        "Validação concluída. Seu teste SSH de 3 horas foi criado.\n\n"
-                        f"Login: {resultado['login']}\n"
-                        f"Senha: {resultado['senha']}\n"
-                        f"Validade: {resultado['expira']}\n\n"
-                        "Use esses dados no aplicativo para conectar."
-                    ),
-                )
-            ]
-
         _atualizar_dados(conversa, quer_contratar=True)
         return transferir(db, conversa, _motivo_internet(conversa))
 
@@ -1205,7 +823,7 @@ def iniciar_iptv(
     if marca:
         _atualizar_dados(conversa, marca_tv=marca)
         conversa.etapa = IPTV_SMART
-        return [_msg(db, conversa, "ia", f"Ã“timo, TV *{marca}*! " + oferta.pergunta_smart())]
+        return [_msg(db, conversa, "ia", f"Ótimo, TV *{marca}*! " + oferta.pergunta_smart())]
 
     return [_msg(db, conversa, "ia", oferta.pergunta_marca())]
 
@@ -1221,7 +839,7 @@ def tratar_iptv_plano(
             _atualizar_dados(conversa, marca_tv=marca)
             conversa.etapa = IPTV_SMART
             return [
-                _msg(db, conversa, "ia", f"Ã“timo, TV *{marca}*! " + oferta.pergunta_smart())
+                _msg(db, conversa, "ia", f"Ótimo, TV *{marca}*! " + oferta.pergunta_smart())
             ]
         conversa.etapa = IPTV_MARCA
         return [_msg(db, conversa, "ia", oferta.pergunta_marca())]
@@ -1469,9 +1087,3 @@ def tratar_iptv_confirmar(
         ]
 
     return responder_generico(db, conversa, texto)
-
-
-
-
-
-

@@ -486,18 +486,6 @@
   .form-conhecimento { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
   .form-conhecimento .acoes-dialogo { justify-content: flex-start; margin-top: 2px; }
 
-  .historico-importar { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-  .historico-importar p { margin: 0; font-size: 11px; color: var(--texto-fraco); line-height: 1.5; }
-  .historico-importar input[type="file"] { font-size: 11px; }
-  .historico-importar textarea { margin-bottom: 0; }
-  .historico-importar .acoes-dialogo { justify-content: flex-start; }
-  .historico-resumo { font-size: 11px; color: var(--texto-fraco); margin-top: 4px; }
-  .candidato .check {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11px; color: var(--texto-fraco); cursor: pointer;
-  }
-  .candidato .check input { width: auto; margin: 0; padding: 0; }
-
   /* ----------------------------- toast ---------------------------------- */
   .toast {
     position: fixed;
@@ -541,7 +529,7 @@
     <p>Informe a chave da API (header <b>X-API-Key</b>). Ela fica no arquivo <code>.env</code>.</p>
     <input id="campoChave" type="password" placeholder="X-API-Key" autocomplete="off">
     <button class="primario" style="width:100%" id="btnEntrar">Entrar</button>
-    <div class="dica">A chave está no arquivo <code>.env</code> (variável <code>API_KEY</code>).</div>
+    <div class="dica">A mesma chave usada no Painel de Assinaturas.</div>
   </div>
 </div>
 
@@ -555,7 +543,7 @@
       <span class="pilula" id="statusIA"><span class="bolinha"></span> IA</span>
       <span class="pilula" id="statusLink"><span class="bolinha"></span> Link do app</span>
       <button id="btnDuvidas" title="Perguntas que a IA não soube responder">Dúvidas <span class="contador zero" id="contadorDuvidas">0</span></button>
-      <a class="botao" href="/docs">API</a>
+      <a class="botao" href="/painel">Painel</a>
       <button class="primario" id="btnNova">+ Nova conversa</button>
     </div>
   </header>
@@ -607,7 +595,7 @@
   <div class="duvidas-cabecalho">
     <div>
       <h3>Dúvidas para ensinar a IA</h3>
-      <p>Perguntas que a IA não soube responder. Escreva a resposta oficial, marque “Salvar na base” para ela usar nas próximas conversas e, se quiser, marque “Enviar ao cliente” para responder na hora sem tirar a conversa da IA.</p>
+      <p>Perguntas que a IA não soube responder. Escreva a resposta oficial e marque “Salvar na base” para ela usar nas próximas conversas. Para responder agora ao cliente, assuma a conversa e use o chat.</p>
     </div>
     <button type="button" id="btnFecharDuvidas" title="Fechar">✕</button>
   </div>
@@ -628,19 +616,6 @@
   <details>
     <summary id="tituloBase">Base de conhecimento</summary>
     <div class="conhecimento-lista" id="listaConhecimento"></div>
-  </details>
-
-  <details>
-    <summary>+ Importar histórico do WhatsApp</summary>
-    <div class="historico-importar">
-      <p>Exporte uma conversa do WhatsApp como <b>.txt</b> (sem mídia) e envie aqui. A IA sugere pares de pergunta e resposta; você revisa e salva só os que estiverem certos.</p>
-      <input type="file" id="arquivoHistorico" accept=".txt,text/plain">
-      <textarea id="historicoTexto" rows="4" placeholder="Ou cole aqui o conteúdo do arquivo .txt..."></textarea>
-      <div class="acoes-dialogo">
-        <button type="button" class="primario" id="btnAnalisarHistorico">Analisar histórico</button>
-      </div>
-      <div id="historicoResultado"></div>
-    </div>
   </details>
 
   <div class="acoes-dialogo" style="margin-top:14px">
@@ -689,7 +664,6 @@
     atual: null,
     duvidas: [],
     conhecimento: [],
-    historico: [],
     ultimoCount: -1,
     filtro: "todas",
     busca: "",
@@ -1118,8 +1092,7 @@
         <blockquote>${escapar(d.pergunta)}</blockquote>
         <textarea rows="2" placeholder="Resposta oficial para ensinar a IA..."></textarea>
         <div class="duvida-acoes">
-          <label class="check"><input type="checkbox" data-campo="salvar" checked> Salvar na base</label>
-          <label class="check"><input type="checkbox" data-campo="enviar" ${d.conversa_id ? "" : "disabled"}> Enviar ao cliente</label>
+          <label class="check"><input type="checkbox" checked> Salvar na base</label>
           <span>
             <button data-acao="ignorar">Ignorar</button>
             <button class="primario" data-acao="responder">Responder</button>
@@ -1175,93 +1148,12 @@
       toast("Escreva a resposta oficial antes de enviar.", true);
       return;
     }
-    const salvar = card.querySelector('[data-campo="salvar"]').checked;
-    const enviar = card.querySelector('[data-campo="enviar"]').checked;
-    const retorno = await api(`/atendimento/duvidas/${id}/responder`, {
+    const salvar = card.querySelector('input[type="checkbox"]').checked;
+    await api(`/atendimento/duvidas/${id}/responder`, {
       metodo: "POST",
-      corpo: { resposta, salvar_na_base: salvar, enviar_ao_cliente: enviar },
+      corpo: { resposta, salvar_na_base: salvar },
     });
-    if (salvar && retorno.enviado_ao_cliente) {
-      toast("Resposta enviada ao cliente e salva na base.");
-    } else if (retorno.enviado_ao_cliente) {
-      toast("Resposta enviada ao cliente.");
-    } else if (salvar) {
-      toast("Resposta salva e ensinada à IA.");
-    } else {
-      toast("Resposta registrada sem alterar a base.");
-    }
-  }
-
-  function renderHistorico(dados) {
-    const alvo = $("historicoResultado");
-    const candidatos = dados.candidatos || [];
-    ESTADO.historico = candidatos;
-    if (!candidatos.length) {
-      alvo.innerHTML = `<div class="duvidas-vazio">Não encontrei pares de pergunta e resposta nesse arquivo. Confira se é o .txt exportado do WhatsApp.</div>`;
-      return;
-    }
-    alvo.innerHTML = `
-      <div class="historico-resumo">
-        ${dados.mensagens} mensagens lidas · ${candidatos.length} sugestões
-        ${dados.negocio_detectado.length ? `· atendimento identificado: ${escapar(dados.negocio_detectado.join(", "))}` : ""}
-      </div>
-      ${candidatos.map((item, indice) => `
-        <article class="duvida candidato" data-indice="${indice}">
-          <label class="check"><input type="checkbox" ${item.ja_na_base ? "" : "checked"}> usar esta resposta</label>
-          <blockquote>${escapar(item.pergunta)}</blockquote>
-          <textarea rows="2">${escapar(item.resposta)}</textarea>
-        </article>`).join("")}
-      <div class="acoes-dialogo" style="margin-top:10px">
-        <button type="button" class="primario" id="btnSalvarHistorico">Salvar selecionadas na base</button>
-      </div>`;
-  }
-
-  async function analisarHistorico() {
-    const texto = $("historicoTexto").value.trim();
-    if (texto.length < 10) {
-      toast("Selecione o arquivo .txt ou cole o histórico.", true);
-      return;
-    }
-    const botao = $("btnAnalisarHistorico");
-    botao.disabled = true;
-    try {
-      const dados = await api("/atendimento/historico/analisar", {
-        metodo: "POST",
-        corpo: { texto, negocio: (ESTADO.config && ESTADO.config.nome_negocio) || "" },
-      });
-      renderHistorico(dados);
-      toast(`${dados.total} sugestão(ões) encontradas.`);
-    } catch (erro) {
-      toast(erro.message, true);
-    } finally {
-      botao.disabled = false;
-    }
-  }
-
-  async function salvarHistorico() {
-    const cards = Array.from(
-      document.querySelectorAll("#historicoResultado .candidato")
-    );
-    const itens = cards
-      .filter((card) => card.querySelector('input[type="checkbox"]').checked)
-      .map((card) => ({
-        pergunta: card.querySelector("blockquote").textContent.trim(),
-        resposta: card.querySelector("textarea").value.trim(),
-      }))
-      .filter((item) => item.pergunta.length >= 3 && item.resposta.length >= 3);
-    if (!itens.length) {
-      toast("Selecione pelo menos uma sugestão.", true);
-      return;
-    }
-    try {
-      for (const item of itens) {
-        await api("/atendimento/conhecimento", { metodo: "POST", corpo: item });
-      }
-      await carregarDuvidas();
-      toast(`${itens.length} resposta(s) salvas na base.`);
-    } catch (erro) {
-      toast(erro.message, true);
-    }
+    toast(salvar ? "Resposta salva e ensinada à IA." : "Resposta registrada sem alterar a base.");
   }
 
   async function adicionarConhecimento(evento) {
@@ -1327,21 +1219,6 @@
   $("btnFecharDuvidas").addEventListener("click", () => $("dialogDuvidas").close());
   $("btnFecharDuvidas2").addEventListener("click", () => $("dialogDuvidas").close());
   $("formConhecimento").addEventListener("submit", adicionarConhecimento);
-
-  $("btnAnalisarHistorico").addEventListener("click", analisarHistorico);
-  $("arquivoHistorico").addEventListener("change", async () => {
-    const arquivo = $("arquivoHistorico").files[0];
-    if (!arquivo) return;
-    try {
-      $("historicoTexto").value = await arquivo.text();
-      toast("Arquivo carregado. Clique em Analisar histórico.");
-    } catch (erro) {
-      toast("Não consegui ler esse arquivo.", true);
-    }
-  });
-  $("historicoResultado").addEventListener("click", (e) => {
-    if (e.target.closest("#btnSalvarHistorico")) salvarHistorico();
-  });
 
   $("listaDuvidas").addEventListener("click", async (e) => {
     const botao = e.target.closest("[data-acao]");
@@ -1437,53 +1314,6 @@
   } else {
     abrirLogin();
   }
-</script>
-<style id="connecttv-layout-v1">
-.ctv-tools{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:10px!important;width:100%;box-sizing:border-box}
-.ctv-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.ctv-nav{padding-right:12px;border-right:1px solid #ffffff22}
-.ctv-status{flex:1;min-width:160px}
-.ctv-tools a,.ctv-tools button,.ctv-tools summary{font:inherit;font-size:13px;box-sizing:border-box;min-height:38px;border-radius:10px;padding:9px 13px;text-decoration:none;color:#eef0ff;border:1px solid #ffffff26;background:#ffffff09;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
-.ctv-tools a:hover,.ctv-tools button:hover,.ctv-tools summary:hover{background:#ffffff18}
-.ctv-tools a[aria-current="page"]{background:#7657dc;border-color:#987dff}
-.ctv-settings{position:relative}
-.ctv-settings summary{list-style:none}
-.ctv-settings summary::-webkit-details-marker{display:none}
-.ctv-settings[open]>.ctv-settings-content{position:absolute;right:0;top:calc(100% + 8px);z-index:200;background:#211b43;border:1px solid #ffffff30;border-radius:12px;padding:10px;box-shadow:0 14px 35px #0008;min-width:240px;display:flex;flex-direction:column;gap:8px}
-.ctv-settings-content>*{width:100%;justify-content:flex-start!important;margin:0!important}
-@media(max-width:760px){.ctv-nav{width:100%;padding-right:0;padding-bottom:8px;border-right:0;border-bottom:1px solid #ffffff22}.ctv-status{width:100%;flex:auto}.ctv-settings[open]>.ctv-settings-content{right:0;min-width:220px}}
-</style>
-<script id="connecttv-layout-script-v1">
-(function(){
-function setup(){
- const bar=document.querySelector('header .acoes, .topo .acoes');
- if(!bar){console.warn('ConnectTV: cabecalho .acoes nao encontrado.');return;}
- bar.classList.add('ctv-tools');
- const nav=document.createElement('nav');nav.className='ctv-group ctv-nav';nav.setAttribute('aria-label','Navegação principal');
- const status=document.createElement('div');status.className='ctv-group ctv-status';
- const actions=document.createElement('div');actions.className='ctv-group ctv-actions';
- const settings=document.createElement('details');settings.className='ctv-settings';
- const summary=document.createElement('summary');summary.textContent='Configurações';
- const content=document.createElement('div');content.className='ctv-settings-content';settings.append(summary,content);
- const original=Array.from(bar.children);
- for(const [href,label] of [['/painel','Painel de clientes'],['/atendimento','Atendimento IA'],['/indicadores','Indicadores']]){
-  let link=original.find(e=>e.tagName==='A'&&(()=>{try{return new URL(e.href,location.href).pathname===href}catch(_){return false}})());
-  if(!link){link=document.createElement('a');link.href=href;link.textContent=label;}
-  if(location.pathname===href)link.setAttribute('aria-current','page');
-  nav.append(link);
- }
- for(const el of original){
-  if(nav.contains(el))continue;
-  const t=(el.textContent||'').trim().toLowerCase();
-  if(/ensinar|segmentos|base e d[uú]vidas|^api$|^sair$/.test(t))content.append(el);
-  else if(/ia ativa|link do app|ia inativa|ia desativada/.test(t))status.append(el);
-  else actions.append(el);
- }
- bar.append(nav,status,actions,settings);
- if(!content.children.length)settings.hidden=true;
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
-})();
 </script>
 </body>
 </html>

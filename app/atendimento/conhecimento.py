@@ -8,27 +8,107 @@ from .texto import normalizar
 
 # Palavras comuns que nao ajudam a identificar o assunto da pergunta.
 PARADAS = {
-    "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "que",
-    "em", "no", "na", "nos", "nas", "um", "uma", "para", "pra", "com",
-    "por", "se", "me", "meu", "minha", "tem", "ter", "sobre", "qual",
-    "quais", "quanto", "como", "onde", "quando", "voce", "voces", "ser",
-    "sou", "esta", "esse", "essa", "isso", "aquilo", "mais", "muito",
-    "pode", "posso", "faz", "fazer", "gostaria", "queria", "quero",
+    "a",
+    "o",
+    "as",
+    "os",
+    "de",
+    "da",
+    "do",
+    "das",
+    "dos",
+    "e",
+    "que",
+    "em",
+    "no",
+    "na",
+    "nos",
+    "nas",
+    "um",
+    "uma",
+    "para",
+    "pra",
+    "com",
+    "por",
+    "se",
+    "me",
+    "meu",
+    "minha",
+    "tem",
+    "ter",
+    "sobre",
+    "qual",
+    "quais",
+    "quanto",
+    "como",
+    "onde",
+    "quando",
+    "voce",
+    "voces",
+    "ser",
+    "sou",
+    "esta",
+    "esse",
+    "essa",
+    "isso",
+    "aquilo",
+    "mais",
+    "muito",
+    "pode",
+    "posso",
+    "faz",
+    "fazer",
+    "gostaria",
+    "queria",
+    "quero",
 }
 
+# Assuntos aceitos na base: somente o produto vendido (internet + IPTV).
 ASSUNTOS_PRODUTO = {
-    "internet", "vpn", "iptv", "plano", "planos", "chip", "tim", "vivo",
-    "recarga", "android", "iphone", "ios", "aplicativo", "app", "play",
-    "store", "tv", "televisao", "smart", "box", "streamer", "streamers",
-    "teste", "gratis", "preco", "valor", "mensalidade", "ativar",
-    "ativacao", "instalar", "assinatura", "basico", "completo", "cartao",
-    "boleto", "pix", "pagamento", "garantia", "cancelar", "cancelamento",
-    "renovar", "renovacao", "vencimento", "suporte", "seguro", "segura",
-    "seguranca", "confiavel", "confianca", "confiar", "golpe", "fraude",
-    "virus", "hacker", "privacidade", "criptografia", "criptografado",
-    "protegido", "protege", "net", "dados", "ilimitada", "ilimitado",
-    "foto", "print", "comprovante", "senha", "login", "email", "loja",
-    "pago", "pagar", "pagamento", "conectando", "conectar", "marca",
+    "internet",
+    "vpn",
+    "iptv",
+    "plano",
+    "planos",
+    "chip",
+    "tim",
+    "vivo",
+    "recarga",
+    "android",
+    "iphone",
+    "ios",
+    "aplicativo",
+    "app",
+    "play",
+    "store",
+    "tv",
+    "televisao",
+    "smart",
+    "box",
+    "streamer",
+    "streamers",
+    "teste",
+    "gratis",
+    "preco",
+    "valor",
+    "mensalidade",
+    "ativar",
+    "ativacao",
+    "instalar",
+    "assinatura",
+    "basico",
+    "completo",
+    "cartao",
+    "boleto",
+    "pix",
+    "pagamento",
+    "garantia",
+    "cancelar",
+    "cancelamento",
+    "renovar",
+    "renovacao",
+    "vencimento",
+    "suporte",
 }
 
 
@@ -42,6 +122,7 @@ def _palavras(texto: str) -> list[str]:
 
 
 def parece_produto(texto: str) -> bool:
+    """Heuristica: a pergunta fala de internet, IPTV ou dos aplicativos."""
     return bool(set(_palavras(texto)) & ASSUNTOS_PRODUTO)
 
 
@@ -104,27 +185,23 @@ def _termos(entrada: dict) -> list[str]:
 
 
 def _pontuar(texto_normalizado: str, entrada: dict) -> float:
-    """Quanto a mensagem do cliente combina com a entrada (0 a 1).
-
-    Basta um termo forte aparecer: com varios termos por entrada, exigir uma
-    fracao deles fazia perguntas curtas ("como pago?", "e golpe?") nunca
-    encontrarem a resposta certa.
-    """
     termos = _termos(entrada)
     if not termos:
         return 0.0
+    achados = 0
     for termo in termos:
         if not termo:
             continue
         if " " in termo:
             if termo in texto_normalizado:
-                return 1.0
+                achados += 1
         elif re.search(rf"\b{re.escape(termo)}\b", texto_normalizado):
-            return 1.0
-    return 0.0
+            achados += 1
+    return achados / len(termos)
 
 
 def buscar(texto: str) -> dict | None:
+    """Procura a entrada mais parecida. Retorna None se nao houver confianca."""
     alvo = normalizar(texto)
     if len(alvo) < 3:
         return None
@@ -133,7 +210,7 @@ def buscar(texto: str) -> dict | None:
     melhor_nota = 0.0
     for entrada in carregar():
         nota = _pontuar(alvo, entrada)
-        if nota > melhor_nota:
+        if nota >= 0.6 and nota > melhor_nota:
             melhor = entrada
             melhor_nota = nota
     return melhor
@@ -178,29 +255,3 @@ def remover(indice: int) -> bool:
 
 def total() -> int:
     return len(carregar())
-
-
-def para_prompt(texto: str = "", limite: int = 20, maximo: int = 8000) -> str:
-    """Envia mais contexto da base para o Gemini interpretar perguntas variadas."""
-    entradas = carregar()
-    if not entradas:
-        return ""
-
-    alvo = normalizar(texto or "")
-    ordenadas = sorted(
-        enumerate(entradas),
-        key=lambda par: (-_pontuar(alvo, par[1]) if alvo else 0.0, par[0]),
-    )
-
-    linhas: list[str] = []
-    tamanho = 0
-    for _, entrada in ordenadas[:limite]:
-        resposta = " ".join(entrada["resposta"].split())
-        if len(resposta) > 700:
-            resposta = resposta[:697].rstrip() + "..."
-        linha = f"- P: {entrada['pergunta']}\n  R: {resposta}"
-        if tamanho + len(linha) > maximo:
-            break
-        linhas.append(linha)
-        tamanho += len(linha) + 1
-    return "\n".join(linhas)

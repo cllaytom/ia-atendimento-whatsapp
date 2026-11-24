@@ -27,16 +27,6 @@ class RespostaHumano(BaseModel):
 class RespostaDuvida(BaseModel):
     resposta: str = Field(min_length=1, max_length=4000)
     salvar_na_base: bool = True
-    enviar_ao_cliente: bool = Field(
-        default=False,
-        description="Envia a resposta agora para a conversa do cliente.",
-    )
-
-
-class HistoricoAnalise(BaseModel):
-    texto: str = Field(min_length=10, max_length=2_000_000)
-    negocio: str | None = Field(default=None, max_length=120)
-    limite: int = Field(default=200, ge=1, le=1000)
 
 
 class EntradaConhecimento(BaseModel):

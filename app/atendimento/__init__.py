@@ -1,1 +1,1 @@
-"""Atendimento automatico da ConnectTV (WhatsApp simulado)."""
+"""Atendimento automatico (WhatsApp simulado) da base de assinaturas."""

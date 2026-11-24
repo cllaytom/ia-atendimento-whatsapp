@@ -1,0 +1,1423 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campanha de reativação — ConnectTV</title>
+<!--
+  ============================================================================
+  CAMPANHA DE REATIVACAO - menu novo, independente do atendimento IA.
+  Modo padrao: PREVIA. Nada e enviado; a fila fica no banco da campanha.
+  ============================================================================
+-->
+<style>
+  :root {
+    --bg-1: #0d0b21;
+    --bg-2: #171240;
+    --card: #1b1740;
+    --card-alto: #221d52;
+    --borda: rgba(255, 255, 255, .09);
+    --texto: #eef0ff;
+    --texto-fraco: #9aa0c7;
+    --azul: #4f7cff;
+    --ciano: #2ad4e8;
+    --roxo: #8b5cf6;
+    --verde: #2fcf8f;
+    --amarelo: #f5b83d;
+    --vermelho: #ff5c7a;
+    --raio: 16px;
+    --sombra: 0 18px 40px rgba(0, 0, 0, .35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: var(--texto);
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(79, 124, 255, .22), transparent 60%),
+      radial-gradient(800px 500px at 90% 0%, rgba(139, 92, 246, .20), transparent 55%),
+      linear-gradient(160deg, var(--bg-1), var(--bg-2) 60%, #0f0c29);
+    background-attachment: fixed;
+  }
+  .topo {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; padding: 22px 28px 6px; flex-wrap: wrap;
+  }
+  .topo h1 {
+    margin: 0; font-size: 24px; letter-spacing: .3px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ponto {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--verde); box-shadow: 0 0 0 4px rgba(47, 207, 143, .15);
+    flex: 0 0 auto;
+  }
+  .sub { margin: 6px 0 0 22px; color: var(--texto-fraco); font-size: 13px; }
+  .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+  button, .botao {
+    font: inherit; font-size: 13px; color: var(--texto);
+    background: rgba(255, 255, 255, .06); border: 1px solid var(--borda);
+    border-radius: 10px; padding: 9px 14px; cursor: pointer;
+    text-decoration: none; transition: .15s;
+  }
+  button:hover, .botao:hover { background: rgba(255, 255, 255, .12); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .primario {
+    background: linear-gradient(135deg, var(--azul), var(--roxo));
+    border-color: transparent; font-weight: 600;
+  }
+  .perigo { border-color: rgba(255, 92, 122, .5); color: #ffc3ce; }
+  main { padding: 18px 28px 40px; display: grid; gap: 16px; }
+  .linha {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+  .card {
+    background: linear-gradient(180deg, var(--card), var(--card-alto));
+    border: 1px solid var(--borda); border-radius: var(--raio);
+    padding: 18px; box-shadow: var(--sombra);
+  }
+  .card.larga { grid-column: 1 / -1; }
+  .card h2 { font-size: 16px; margin: 0 0 4px; }
+  .rotulo {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--texto-fraco);
+  }
+  .valor { font-size: 30px; font-weight: 700; margin-top: 8px; }
+  .detalhe { font-size: 12px; color: var(--texto-fraco); margin-top: 6px; }
+  .aviso {
+    border-radius: 12px; padding: 12px 16px; font-size: 13px;
+    border: 1px solid rgba(245, 184, 61, .4);
+    background: rgba(245, 184, 61, .10); color: #ffe0a3;
+  }
+  .aviso.seguro {
+    border-color: rgba(47, 207, 143, .4);
+    background: rgba(47, 207, 143, .10); color: #b9f5d9;
+  }
+  .ferramentas { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+  select, input[type=text], input[type=number], textarea {
+    background: rgba(0, 0, 0, .25); color: var(--texto);
+    border: 1px solid var(--borda); border-radius: 10px;
+    padding: 10px 12px; font: inherit; font-size: 13px;
+  }
+  select { min-width: 200px; }
+  textarea { width: 100%; resize: vertical; line-height: 1.55; }
+  label { font-size: 13px; color: var(--texto-fraco); display: flex; align-items: center; gap: 7px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+  th {
+    color: var(--texto-fraco); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .06em; font-weight: 600;
+  }
+  tr:hover td { background: rgba(255, 255, 255, .03); }
+  .msg { white-space: pre-wrap; max-width: 520px; color: #dfe3ff; }
+  .acoes-celula { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    display: inline-block; font-size: 11px; padding: 3px 8px;
+    border-radius: 999px; background: rgba(79, 124, 255, .15);
+    border: 1px solid rgba(79, 124, 255, .4); white-space: nowrap;
+  }
+  .tag.ok { background: rgba(47, 207, 143, .12); border-color: rgba(47, 207, 143, .4); color: #a9f0d1; }
+  .tag.ruim { background: rgba(255, 92, 122, .12); border-color: rgba(255, 92, 122, .4); color: #ffc3ce; }
+  .contador { color: var(--texto-fraco); font-size: 12px; }
+  .nota { color: var(--texto-fraco); font-size: 12px; margin-top: 8px; }
+  pre.log {
+    margin: 10px 0 0; padding: 12px; max-height: 260px; overflow: auto;
+    background: rgba(0, 0, 0, .35); border: 1px solid var(--borda); border-radius: 10px;
+    font-size: 11.5px; line-height: 1.45; color: #cfd5ff; white-space: pre-wrap;
+  }
+  .scroll { overflow-x: auto; }
+  .vazio { color: var(--texto-fraco); font-size: 13px; padding: 10px 0; }
+  .login {
+    position: fixed; inset: 0; display: none; place-items: center;
+    background: rgba(6, 5, 18, .86); backdrop-filter: blur(6px); z-index: 50;
+  }
+  .login.aberto { display: grid; }
+  .caixa {
+    width: min(380px, 92vw); background: var(--card);
+    border: 1px solid var(--borda); border-radius: 18px;
+    padding: 24px; box-shadow: var(--sombra);
+  }
+  .caixa h3 { margin: 0 0 8px; }
+  .caixa p { color: var(--texto-fraco); font-size: 13px; line-height: 1.5; }
+  .caixa input {
+    width: 100%; margin: 8px 0 12px; background: rgba(0, 0, 0, .3);
+    border: 1px solid var(--borda); border-radius: 10px; padding: 11px 12px;
+    color: var(--texto); font: inherit;
+  }
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #241f57; border: 1px solid rgba(79, 124, 255, .5);
+    color: var(--texto); padding: 12px 18px; border-radius: 12px;
+    font-size: 13px; max-width: min(560px, 92vw); box-shadow: var(--sombra);
+    opacity: 0; pointer-events: none; transition: .2s; z-index: 60;
+  }
+  .toast.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.erro { border-color: rgba(255, 92, 122, .6); background: #3a1730; }
+  html { scroll-behavior: smooth; }
+  /* ------------------------- modo simples / avançado ------------------------ */
+  .passos {
+    display: grid; gap: 10px; margin-top: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  }
+  .passo {
+    background: rgba(255, 255, 255, .04); border: 1px solid var(--borda);
+    border-radius: 12px; padding: 14px;
+  }
+  .passo .num, .card h2 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    font-size: 12px; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, var(--azul), var(--roxo));
+  }
+  .passo .num { margin-bottom: 8px; }
+  .passo b { display: block; font-size: 13px; margin-bottom: 4px; }
+  .passo p { margin: 0; color: var(--texto-fraco); font-size: 12px; line-height: 1.5; }
+  .card h2 .num { margin-right: 8px; vertical-align: -4px; }
+  .linha.avancado { display: none; }
+  body.mostrar-tudo .linha.avancado { display: grid; }
+  .atalhos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .atalhos .botao { font-size: 12px; padding: 7px 12px; }
+  .alternar.ativo { background: rgba(79, 124, 255, .25); border-color: rgba(79, 124, 255, .7); }
+  .selo {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    color: var(--texto-fraco); border: 1px dashed var(--borda); margin-left: 8px;
+  }
+  @media (max-width: 640px) {
+    main { padding: 12px 14px 28px; }
+    .topo { padding: 16px 14px 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login" id="telaLogin">
+  <div class="caixa">
+    <h3>Acessar a campanha</h3>
+    <p>Use a mesma chave do painel (header <b>X-API-Key</b>).</p>
+    <input id="campoChave" type="password" placeholder="X-API-Key" autocomplete="off">
+    <button class="botao primario" style="width:100%" id="btnEntrar">Entrar</button>
+  </div>
+</div>
+
+<header class="topo">
+  <div>
+    <h1><span class="ponto"></span><span id="titulo">Campanha de reativação</span></h1>
+    <div class="sub" id="subtitulo">Carregando...</div>
+  </div>
+  <div class="acoes">
+    <button class="botao primario" id="btnAtivar" disabled title="Disponível quando existir canal de envio">Ativar campanha</button>
+    <button class="botao perigo" id="btnPausar" title="Desligar a campanha">Pausar</button>
+    <a class="botao" href="/painel">Voltar ao painel</a>
+    <button id="btnMostrarTudo" class="alternar" title="Mostrar as funções avançadas">Mostrar tudo</button>
+    <button id="btnAtualizar">Atualizar</button>
+    <button id="btnSair" title="Trocar a chave">Sair</button>
+  </div>
+</header>
+
+<main>
+  <div class="aviso" id="avisoModo">Carregando modo...</div>
+
+  <section class="linha">
+    <article class="card larga">
+      <h2>Como usar (3 passos)</h2>
+      <div class="nota">Esta tela mostra só o essencial. Parâmetros, logs, opt-out e outras funções ficam em <b>Mostrar tudo</b>, no topo.</div>
+      <div class="passos">
+        <div class="passo">
+          <span class="num">1</span>
+          <b>Ligue o robô</b>
+          <p>No cartão <b>Robô do WhatsApp</b>, clique em <b>Ligar robô (manual)</b>. Ele conecta e fica esperando — nada sai sozinho.</p>
+        </div>
+        <div class="passo">
+          <span class="num">2</span>
+          <b>Ative a campanha</b>
+          <p>No topo, <b>Ativar campanha</b> e digite <code>ENVIAR</code>. É isso que libera o envio pelo painel.</p>
+        </div>
+        <div class="passo">
+          <span class="num">3</span>
+          <b>Envie um por um</b>
+          <p>Na <b>Fila</b>, clique em <b>Enviar agora</b> no contato. A linha fica verde quando o WhatsApp aceita.</p>
+        </div>
+      </div>
+      <div class="atalhos">
+        <a class="botao" href="#secRobo">1 · Robô</a>
+        <a class="botao" href="#secFila">2 · Fila</a>
+        <a class="botao" href="#secNumeros">3 · Adicionar contatos</a>
+      </div>
+    </article>
+  </section>
+
+  <section class="linha avancado">
+    <article class="card larga">
+      <h2>Números da campanha <span class="selo">avançado</span></h2>
+      <div class="nota">O <b>remetente</b> é quem dispara (fica fora dos alvos). O <b>número de teste</b> é o destinatário autorizado das fases supervisionadas (também fica fora da fila normal). Os dois podem ser trocados a qualquer momento.</div>
+      <div class="ferramentas">
+        <input type="text" id="numeroRemetente" placeholder="Remetente: DDD + número" maxlength="20">
+        <input type="text" id="numeroTeste" placeholder="Número de teste (opcional)" maxlength="20">
+        <button class="botao primario" id="btnSalvarNumero">Salvar números</button>
+        <span class="contador" id="numeroRemetenteNota"></span>
+      </div>
+    </article>
+  </section>
+
+  <section class="linha avancado">
+    <article class="card larga">
+      <h2>Parâmetros de envio <span class="selo">avançado</span></h2>
+      <div class="nota">Valem a partir do próximo envio, sem reiniciar o worker. <b>Cota diária 0</b> usa a rampa automática (10 → 20 → 30/dia); qualquer outro valor vira cota fixa. <b>Cooldown</b> é o tempo mínimo antes de repetir o mesmo contato. <b>Tentativas 1</b> = falha não é repetida.</div>
+      <div class="ferramentas">
+        <label>Cota diária <input type="number" id="parCota" min="0" max="100" style="width:90px"></label>
+        <label>Intervalo mín (s) <input type="number" id="parIntMin" min="10" max="3600" style="width:100px"></label>
+        <label>Intervalo máx (s) <input type="number" id="parIntMax" min="10" max="3600" style="width:100px"></label>
+        <label>Pausa longa a cada <input type="number" id="parPausaCada" min="1" max="100" style="width:80px"></label>
+        <label>Pausa mín (s) <input type="number" id="parPausaMin" min="30" max="7200" style="width:100px"></label>
+        <label>Pausa máx (s) <input type="number" id="parPausaMax" min="30" max="7200" style="width:100px"></label>
+        <label>Cooldown (dias) <input type="number" id="parCooldown" min="0" max="365" style="width:90px"></label>
+        <label>Tentativas <input type="number" id="parTentativas" min="1" max="5" style="width:80px"></label>
+        <label>Falhas seguidas até pausar <input type="number" id="parFalhas" min="0" max="20" style="width:90px"></label>
+      </div>
+      <div class="ferramentas">
+        <label><input type="checkbox" id="parJanelas"> respeitar janelas de horário (seg-sex 09:00–11:30 e 14:00–17:30)</label>
+        <button class="botao primario" id="btnSalvarParametros">Salvar parâmetros</button>
+        <button class="botao" id="btnRestaurarParametros">Restaurar padrões</button>
+        <span class="contador" id="parResumo"></span>
+      </div>
+    </article>
+  </section>
+
+  <section class="linha" id="secRobo">
+    <article class="card larga">
+      <h2><span class="num">1</span>Robô do WhatsApp</h2>
+      <div class="nota">É o robô que segura a conexão com o WhatsApp. Em <b>manual</b> ele fica conectado e só envia quando você clica em <b>Enviar agora</b>. Em <b>automático</b> ele envia sozinho, respeitando cota, intervalo e (se ligado) as janelas de horário.</div>
+      <div class="ferramentas">
+        <span class="tag" id="roboStatus">—</span>
+        <button class="botao primario" id="btnLigarRobo">Ligar robô (manual)</button>
+        <button class="botao" id="btnLigarAuto">Ligar automático</button>
+        <button class="botao" id="btnTrocarNumero">Trocar número do WhatsApp</button>
+        <button class="botao perigo" id="btnDesligarRobo">Desligar robô</button>
+        <label><input type="checkbox" id="chkAutoRobo"> ligar sozinho ao abrir o painel</label>
+      </div>
+      <div class="nota" id="roboAviso">—</div>
+    </article>
+  </section>
+
+  <section class="linha" id="secFila">
+    <article class="card larga">
+      <h2><span class="num">2</span>Fila da campanha</h2>
+      <div class="nota" id="notaFila">Contatos que vão receber. A fila fica em <code>dados/campanha.db</code>, separada do banco de assinaturas.</div>
+      <div class="ferramentas">
+        <button class="botao perigo" id="btnLimparFila">Limpar pendentes</button>
+        <span class="contador" id="resumoFila"></span>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Produto</th><th>Situação</th><th aria-label="Ações"></th></tr></thead>
+        <tbody id="corpoFila"></tbody>
+      </table></div>
+      <div class="vazio" id="filaVazia" hidden>Nenhum contato na fila. Use o cartão <b>Adicionar contatos</b> abaixo.</div>
+      <div class="nota"><b>Enviar agora</b> manda este contato pelo robô (modo manual), na hora. <b>Abrir no navegador</b> só abre a conversa no seu WhatsApp — quem envia é você, e pode sair do número errado.</div>
+    </article>
+  </section>
+
+  <section class="linha avancado">
+    <article class="card larga">
+      <h2>Saúde do envio <span class="selo">avançado</span></h2>
+      <div class="nota">A campanha se pausa sozinha quando o envio falha várias vezes seguidas ou quando o WhatsApp desconecta. Confira o motivo aqui antes de ativar de novo.</div>
+      <div class="ferramentas">
+        <span class="tag" id="saudeStatus">—</span>
+        <span class="contador" id="saudeResumo"></span>
+        <button class="botao" id="btnAtualizarSaude">Atualizar saúde</button>
+      </div>
+      <div class="nota" id="saudeErro"></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Quando</th><th>Telefone</th><th>Erro</th></tr></thead>
+        <tbody id="corpoFalhas"></tbody>
+      </table></div>
+      <div class="vazio" id="falhasVazio" hidden>Nenhuma falha recente.</div>
+      <h3 style="margin:18px 0 0;font-size:14px">Log do worker</h3>
+      <div class="nota">Últimas linhas de <code>dados/campanha-worker.log</code> (rotaciona em 2 MB).</div>
+      <pre class="log" id="corpoLogs">—</pre>
+      <div class="ferramentas">
+        <button class="botao" id="btnAtualizarLogs">Atualizar log</button>
+      </div>
+    </article>
+  </section>
+
+  <section class="linha">
+    <article class="card">
+      <div class="rotulo">Elegíveis</div>
+      <div class="valor" id="kpiElegiveis">-</div>
+      <div class="detalhe" id="kpiElegiveisDetalhe">prontos para entrar na fila</div>
+    </article>
+    <article class="card">
+      <div class="rotulo">Na fila</div>
+      <div class="valor" id="kpiFila">-</div>
+      <div class="detalhe">alvos pendentes no banco da campanha</div>
+    </article>
+    <article class="card">
+      <div class="rotulo">Enviados</div>
+      <div class="valor" id="kpiEnviados">-</div>
+      <div class="detalhe">histórico de envios da campanha</div>
+    </article>
+    <article class="card">
+      <div class="rotulo">Opt-out</div>
+      <div class="valor" id="kpiOptout">-</div>
+      <div class="detalhe">números bloqueados para sempre</div>
+    </article>
+    <article class="card">
+      <div class="rotulo">Sem telefone</div>
+      <div class="valor" id="kpiSemTelefone">-</div>
+      <div class="detalhe">contatos inválidos ou vazios</div>
+    </article>
+  </section>
+
+  <section class="linha avancado">
+    <article class="card larga">
+      <h2>Filtro e mensagem <span class="selo">avançado</span></h2>
+      <div class="nota">A campanha não envia nada neste modo. Aqui você escolhe o público e revisa exatamente o texto que cada pessoa receberia.</div>
+      <div class="ferramentas">
+        <select id="filtroProduto"><option value="">Todos os produtos</option></select>
+        <label><input type="checkbox" id="variar" checked> variar o texto entre contatos</label>
+        <label><input type="checkbox" id="apenasUnicos"> somente números com 1 cliente</label>
+        <label>quantidade <input type="number" id="quantidade" value="5" min="1" max="500" style="width:90px"></label>
+        <span class="contador" id="resumoBase"></span>
+      </div>
+      <textarea id="mensagem" rows="9" spellcheck="true"></textarea>
+      <div class="nota">Use <b>{nome}</b> para o primeiro nome. A frase com <b>SAIR</b> é acrescentada automaticamente quando falta.</div>
+      <div class="ferramentas">
+        <button class="botao primario" id="btnPrevia">Ver prévia</button>
+        <button class="botao" id="btnFila">Criar fila</button>
+        <button class="botao" id="btnPlano">Calcular dias</button>
+        <button class="botao" id="btnExportar">Exportar lote (.jsonl)</button>
+      </div>
+    </article>
+  </section>
+
+  <section class="linha" id="secNumeros">
+    <article class="card larga">
+      <h2><span class="num">3</span>Adicionar contatos (planilha, lista ou WhatsApp)</h2>
+      <div class="nota">Aceita <b>.xlsx</b>, <b>.xlsb</b> e <b>.csv</b> com colunas de telefone, nome, produto e vencimento (o cabeçalho é reconhecido sozinho). Também dá para colar do Excel: um contato por linha, no formato <code>11999998888;Nome;Produto;31/12/2026</code>. A mensagem vem do cartão <b>Filtro e mensagem</b> acima. Nada é enviado aqui.</div>
+      <div class="ferramentas">
+        <input type="file" id="arquivoPlanilha" accept=".xlsx,.xlsm,.xlsb,.csv,.txt,.tsv">
+        <button class="botao" id="btnLerPlanilha">Ler planilha</button>
+        <span class="contador" id="resumoPlanilha"></span>
+      </div>
+      <textarea id="numeros" rows="7" spellcheck="false" placeholder="11999998888;Maria;IPTV;31/12/2026&#10;11988887777;João"></textarea>
+      <div class="ferramentas">
+        <button class="botao" id="btnConferirNumeros">Conferir lista</button>
+        <button class="botao primario" id="btnAdicionarNumeros">Gravar na fila</button>
+        <span class="contador" id="resumoNumeros"></span>
+      </div>
+      <div id="previaNumeros" hidden>
+        <div class="scroll"><table>
+          <thead><tr><th>Telefone</th><th>Nome</th><th>Produto</th><th>Vencimento</th></tr></thead>
+          <tbody id="corpoNovosNumeros"></tbody>
+        </table></div>
+        <div class="nota" id="notaIgnorados"></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="linha avancado">
+    <article class="card larga">
+      <h2>Contatos do WhatsApp <span class="selo">avançado</span></h2>
+      <div class="nota">Pede ao worker conectado a agenda do número da campanha (funciona com o worker já aberto, manual ou automático). Grupos, listas de transmissão, o remetente, o número de teste e números inválidos ficam de fora. A lista só preenche a conferência acima — nada é enviado.</div>
+      <div class="ferramentas">
+        <button class="botao" id="btnPedirContatos">Pedir lista ao worker</button>
+        <button class="botao" id="btnUsarContatos" disabled>Usar na conferência</button>
+        <span class="contador" id="resumoContatos">—</span>
+      </div>
+    </article>
+  </section>
+
+  <section class="linha" id="secPrevia" hidden>
+    <article class="card larga">
+      <h2>Prévia das mensagens</h2>
+      <div class="nota" id="notaPrevia"></div>
+      <div class="scroll"><table>
+        <thead><tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Produto</th><th>Vencimento</th><th>Mensagem</th><th></th></tr></thead>
+        <tbody id="corpoPrevia"></tbody>
+      </table></div>
+      <div class="nota">O botão <b>WhatsApp</b> abre a conversa com o texto pronto. Você ainda revisa e aperta enviar — nada é disparado pelo sistema.</div>
+    </article>
+  </section>
+
+  <section class="linha" id="secPlano" hidden>
+    <article class="card larga">
+      <h2>Plano de envio (rampa 10 → 20 → 30/dia)</h2>
+      <div class="nota" id="notaPlano"></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Dia útil</th><th>Mensagens</th><th>Janelas</th></tr></thead>
+        <tbody id="corpoPlano"></tbody>
+      </table></div>
+    </article>
+  </section>
+
+  <section class="linha">
+    <article class="card larga">
+      <h2>Números compartilhados (2+ clientes) <span class="selo">avançado</span></h2>
+      <div class="nota">A campanha envia <b>uma mensagem por número</b>. Revise os casos abaixo antes de montar a fila — números com 4+ clientes podem ser de revendedor ou cadastro repetido.</div>
+      <div class="ferramentas">
+        <span class="contador" id="resumoCompartilhados">carregando...</span>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>Telefone</th><th>Clientes</th><th>Quem</th><th></th></tr></thead>
+        <tbody id="corpoCompartilhados"></tbody>
+      </table></div>
+      <div class="vazio" id="compartilhadosVazio" hidden>Nenhum número compartilhado.</div>
+    </article>
+  </section>
+
+  <section class="linha avancado">
+    <article class="card larga">
+      <h2>Opt-out (bloqueio global) <span class="selo">avançado</span></h2>
+      <div class="nota">Quem pediu para sair fica bloqueado para sempre, em qualquer campanha futura. Bloquear também remove o número da fila pendente.</div>
+      <div class="ferramentas">
+        <input type="text" id="optTelefone" placeholder="DDD + número (ex.: 11999998888)" maxlength="20">
+        <input type="text" id="optMotivo" placeholder="Motivo (opcional)" maxlength="200">
+        <button class="botao primario" id="btnBloquear">Bloquear número</button>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>Telefone</th><th>Motivo</th><th>Origem</th><th>Bloqueado em</th><th></th></tr></thead>
+        <tbody id="corpoOptout"></tbody>
+      </table></div>
+      <div class="vazio" id="optoutVazio" hidden>Nenhum número bloqueado.</div>
+    </article>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  let CHAVE = localStorage.getItem("assinaturas.apiKey") || "";
+  let CFG = null;
+  let PARAM = null;
+  const TEXTOS = new Map();
+
+  const numero = (v) => (v || 0).toLocaleString("pt-BR");
+  const formatarTelefone = (n) => {
+    if (!n) return "—";
+    const resto = n.slice(4);
+    return `+${n.slice(0, 2)} ${n.slice(2, 4)} ${resto.slice(0, resto.length - 4)}-${resto.slice(-4)}`;
+  };
+  const dataBR = (iso) => {
+    if (!iso) return "—";
+    const [a, m, d] = String(iso).slice(0, 10).split("-");
+    return d && m && a ? `${d}/${m}/${a}` : iso;
+  };
+  const escapar = (t) => String(t == null ? "" : t).replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+  ));
+
+  const CHAVE_MOSTRAR_TUDO = "campanha.mostrarTudo";
+
+  function aplicarModoTela() {
+    const tudo = localStorage.getItem(CHAVE_MOSTRAR_TUDO) === "1";
+    document.body.classList.toggle("mostrar-tudo", tudo);
+    const botao = $("btnMostrarTudo");
+    botao.textContent = tudo ? "Modo simples" : "Mostrar tudo";
+    botao.classList.toggle("ativo", tudo);
+    botao.title = tudo
+      ? "Esconder as funções avançadas"
+      : "Mostrar parâmetros, logs, opt-out e outras funções avançadas";
+  }
+
+  function toast(texto, erro = false) {    const el = $("toast");
+    el.textContent = texto;
+    el.classList.toggle("erro", erro);
+    el.classList.add("visivel");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => el.classList.remove("visivel"), 5000);
+  }
+
+  function abrirLogin() { $("telaLogin").classList.add("aberto"); $("campoChave").focus(); }
+  function fecharLogin() { $("telaLogin").classList.remove("aberto"); }
+
+  async function api(caminho, metodo = "GET", corpo) {
+    const resposta = await fetch(caminho, {
+      method: metodo,
+      headers: { "X-API-Key": CHAVE, "Content-Type": "application/json" },
+      body: corpo ? JSON.stringify(corpo) : undefined,
+    });
+    if (resposta.status === 401) { abrirLogin(); throw new Error("Chave inválida"); }
+    if (!resposta.ok) {
+      let detalhe = `HTTP ${resposta.status}`;
+      try {
+        const dados = await resposta.json();
+        detalhe = typeof dados.detail === "string" ? dados.detail : JSON.stringify(dados.detail);
+      } catch (_) {}
+      throw new Error(detalhe);
+    }
+    return resposta.status === 204 ? null : resposta.json().catch(() => null);
+  }
+
+  function produtoSelecionado() { return $("filtroProduto").value || ""; }
+
+  async function carregarConfig() {
+    CFG = await api("/campanha/config");
+    $("subtitulo").textContent =
+      `${CFG.marca} · remetente ${formatarTelefone(CFG.numero_remetente)} · banco ${CFG.banco_campanha}`;
+    if (document.activeElement !== $("numeroRemetente")) {
+      $("numeroRemetente").value = CFG.numero_remetente || "";
+    }
+    if (document.activeElement !== $("numeroTeste")) {
+      $("numeroTeste").value = CFG.numero_teste || "";
+    }
+    $("numeroRemetenteNota").textContent =
+      `remetente: ${formatarTelefone(CFG.numero_remetente)} · ` +
+      `teste: ${CFG.numero_teste ? formatarTelefone(CFG.numero_teste) : "não definido"}`;
+    const trava = CFG.envio_real_habilitado ? "" : " Envio real bloqueado por trava de segurança.";
+    const janela = CFG.janelas_ativas
+      ? " Janelas de horario ativas."
+      : " Modo manual: envia a qualquer hora.";
+    const pausa = !CFG.ativa && CFG.motivo_pausa ? ` Motivo: ${CFG.motivo_pausa}.` : "";
+    $("avisoModo").textContent =
+      CFG.aviso + trava + janela + (CFG.ativa ? " CAMPANHA ATIVADA." : " Campanha desligada.") + pausa;
+    $("avisoModo").classList.toggle("seguro", CFG.ativa);
+    $("btnAtivar").disabled = !CFG.envio_ativo || !CFG.envio_real_habilitado || CFG.ativa;
+    $("btnPausar").disabled = !CFG.ativa;
+    $("btnAtivar").title = CFG.envio_ativo
+      ? "Ligar a campanha"
+      : "Disponível quando existir canal de envio (fase 2)";
+    if (!$("mensagem").value.trim()) $("mensagem").value = CFG.mensagem_padrao;
+    aplicarMetricas(CFG.metricas);
+  }
+
+  function preencherParametros(valores) {
+    PARAM = valores;
+    const campos = {
+      parCota: valores.cota_diaria,
+      parIntMin: valores.intervalo_min,
+      parIntMax: valores.intervalo_max,
+      parPausaCada: valores.pausa_cada,
+      parPausaMin: valores.pausa_min,
+      parPausaMax: valores.pausa_max,
+      parCooldown: valores.cooldown_dias,
+      parTentativas: valores.max_tentativas,
+      parFalhas: valores.max_falhas_seguidas,
+    };
+    Object.entries(campos).forEach(([id, valor]) => {
+      if (document.activeElement !== $(id)) $(id).value = valor;
+    });
+    if (document.activeElement !== $("parJanelas")) {
+      $("parJanelas").checked = !!valores.respeitar_janelas;
+    }
+    const cota = valores.cota_diaria > 0
+      ? `cota fixa ${valores.cota_diaria}/dia`
+      : "cota pela rampa 10 → 20 → 30";
+    $("parResumo").textContent =
+      `${cota} · intervalo ${valores.intervalo_min}–${valores.intervalo_max} s · ` +
+      `pausa longa a cada ${valores.pausa_cada} (${valores.pausa_min}–${valores.pausa_max} s) · ` +
+      `cooldown ${valores.cooldown_dias} dia(s) · ${valores.max_tentativas} tentativa(s) · ` +
+      (valores.max_falhas_seguidas > 0
+        ? `pausa após ${valores.max_falhas_seguidas} falha(s) seguida(s) · `
+        : "sem pausa automática · ") +
+      (valores.respeitar_janelas ? "janelas ativas" : "modo manual");
+  }
+
+  async function carregarParametros() {
+    const dados = await api("/campanha/parametros");
+    preencherParametros(dados.parametros);
+  }
+
+  function pintarSaude(dados) {
+    const rotulos = { ok: "OK", atencao: "ATENÇÃO", pausada: "PAUSADA", desligada: "DESLIGADA" };
+    const classes = { ok: "ok", atencao: "", pausada: "ruim", desligada: "" };
+    const etiqueta = $("saudeStatus");
+    etiqueta.textContent = rotulos[dados.status] || dados.status || "—";
+    etiqueta.className = `tag ${classes[dados.status] || ""}`.trim();
+    const trabalho = dados.worker || {};
+    const workerTexto = !trabalho.online
+      ? "worker desligado"
+      : trabalho.modo === "manual"
+        ? "worker manual online"
+        : "worker automático online";
+    $("saudeResumo").textContent =
+      `falhas seguidas: ${dados.falhas_consecutivas}/${dados.limite_falhas || "∞"} · ` +
+      `erros do worker: ${dados.erros_worker || 0} · ${workerTexto} · ` +
+      (dados.ativa
+        ? "campanha ativa"
+        : `campanha pausada${dados.motivo_pausa ? ` (${dados.motivo_pausa})` : ""}`);
+    const linhas = [];
+    if (dados.motivo_pausa) linhas.push(`Pausa: ${dados.motivo_pausa}`);
+    if (dados.ultimo_erro) {
+      linhas.push(
+        `Último erro de envio: ${dados.ultimo_erro}` +
+        (dados.ultimo_erro_em ? ` (${dados.ultimo_erro_em})` : "")
+      );
+    }
+    if (dados.ultimo_erro_worker) {
+      linhas.push(
+        `Último erro do worker: ${dados.ultimo_erro_worker}` +
+        (dados.ultimo_erro_worker_em ? ` (${dados.ultimo_erro_worker_em})` : "")
+      );
+    }
+    $("saudeErro").textContent = linhas.join(" · ") || "Nenhum erro registrado.";
+    const falhas = dados.falhas_recentes || [];
+    $("falhasVazio").hidden = falhas.length > 0;
+    $("corpoFalhas").innerHTML = falhas.map((f) => `
+      <tr>
+        <td>${escapar(f.criado_em)}</td>
+        <td>${escapar(f.telefone)}</td>
+        <td>${escapar(f.erro || "—")}</td>
+      </tr>`).join("");
+  }
+
+  async function carregarSaude() {
+    pintarSaude(await api("/campanha/saude"));
+  }
+
+  async function carregarLogs() {
+    const dados = await api("/campanha/logs?linhas=25");
+    $("corpoLogs").textContent = (dados.linhas || []).join("\n") ||
+      (dados.existe ? "(log vazio)" : "(o worker ainda não gravou o log)");
+  }
+
+  function lerParametrosDoFormulario() {
+    const valores = {
+      cota_diaria: Number($("parCota").value),
+      intervalo_min: Number($("parIntMin").value),
+      intervalo_max: Number($("parIntMax").value),
+      pausa_cada: Number($("parPausaCada").value),
+      pausa_min: Number($("parPausaMin").value),
+      pausa_max: Number($("parPausaMax").value),
+      cooldown_dias: Number($("parCooldown").value),
+      max_tentativas: Number($("parTentativas").value),
+      max_falhas_seguidas: Number($("parFalhas").value),
+      respeitar_janelas: $("parJanelas").checked,
+    };
+    Object.entries(valores).forEach(([chave, valor]) => {
+      if (chave !== "respeitar_janelas" && !Number.isFinite(valor)) {
+        throw new Error("Preencha todos os parâmetros com números inteiros.");
+      }
+    });
+    return valores;
+  }
+
+  function aplicarMetricas(m) {
+    if (!m) return;
+    $("kpiFila").textContent = numero(m.pendentes);
+    $("kpiEnviados").textContent = numero(m.enviados);
+    $("kpiOptout").textContent = numero(m.optouts);
+  }
+
+  async function carregarProdutos() {
+    try {
+      const dados = await api("/campanha/produtos");
+      const atual = $("filtroProduto").value;
+      $("filtroProduto").innerHTML =
+        '<option value="">Todos os produtos</option>' +
+        (dados.itens || []).map((p) =>
+          `<option value="${escapar(p.produto)}">${escapar(p.produto)} (${numero(p.total)})</option>`
+        ).join("");
+      $("filtroProduto").value = atual;
+    } catch (_) {}
+  }
+
+  async function carregarElegiveis() {
+    const produto = produtoSelecionado();
+    const unicos = $("apenasUnicos").checked ? "&apenas_unicos=true" : "";
+    const dados = await api(`/campanha/elegiveis?limite=1&produto=${encodeURIComponent(produto)}${unicos}`);
+    $("kpiElegiveis").textContent = numero(dados.total);
+    $("kpiSemTelefone").textContent = numero(dados.resumo.sem_telefone);
+    $("resumoBase").textContent =
+      `${numero(dados.total)} elegíveis · ${numero(dados.resumo.lidos)} lidos na base · ` +
+      `${numero(dados.resumo.repetido)} repetido(s) (1 msg por número) · ` +
+      `${numero(dados.resumo.compartilhado)} fora por número compartilhado · ` +
+      `${numero(dados.resumo.optout)} em opt-out · ${numero(dados.resumo.em_cooldown)} em cooldown · ` +
+      `${numero(dados.resumo.ja_na_fila)} já na fila · ${numero(dados.resumo.remetente + dados.resumo.teste)} ignorado(s) por ser remetente/teste`;
+  }
+
+  async function acompanharEnvio(alvoId) {
+    const limite = Date.now() + 90000;
+    while (Date.now() < limite) {
+      await new Promise((resolver) => setTimeout(resolver, 2500));
+      let dados;
+      try {
+        dados = await api("/campanha/fila?limite=200");
+      } catch {
+        continue;
+      }
+      const item = (dados.itens || []).find((i) => String(i.id) === String(alvoId));
+      if (!item) break;
+      if (item.status === "enviado") {
+        await carregarFila();
+        await carregarSaude().catch(() => {});
+        toast(`Enviado para +${item.telefone}.`);
+        return;
+      }
+      if (item.status === "falha") {
+        await carregarFila();
+        await carregarSaude().catch(() => {});
+        toast(`Falhou para +${item.telefone}. Veja em Saúde do envio.`, true);
+        return;
+      }
+      if (!item.pedido) {
+        await carregarFila();
+        toast("Pedido cancelado ou não atendido pelo worker.", true);
+        return;
+      }
+    }
+    await carregarFila();
+    toast("Ainda aguardando o worker. Confira o log.", true);
+  }
+
+  async function carregarFila() {
+    const dados = await api("/campanha/fila?limite=200");
+    aplicarMetricas(dados.metricas);
+    const itens = dados.itens || [];
+    const trabalho = dados.worker || {};
+    const manualPronto = Boolean(trabalho.online && trabalho.modo === "manual");
+    $("filaVazia").hidden = itens.length > 0;
+    const pendentes = itens.filter((a) => a.status === "pendente").length;
+    $("resumoFila").textContent = itens.length
+      ? `${numero(pendentes)} pendente(s) · ${numero(itens.length - pendentes)} já processado(s)`
+      : "";
+    $("corpoFila").innerHTML = itens.map((a) => `
+      <tr>
+        <td>${a.id}</td>
+        <td>${escapar(a.nome || "—")}</td>
+        <td>${escapar(a.telefone)}</td>
+        <td>${escapar(a.produto || "—")}</td>
+        <td><span class="tag ${a.status === "enviado" ? "ok" : a.status === "falha" ? "ruim" : ""}">${escapar(a.status)}</span>${a.pedido ? ' <span class="tag">na fila do worker</span>' : ""}</td>
+        <td class="acoes-celula">
+          <button class="botao primario" data-enviar-alvo="${a.id}" ${a.status === "pendente" ? "" : "disabled"} title="${manualPronto ? "Enviar agora pelo robô manual" : "Ligue o robô em modo manual para usar este botão"}">Enviar agora</button>
+          <button class="botao" data-whatsapp-fila="${escapar(a.telefone)}" title="Abre a conversa no seu navegador. Quem envia é você — pode sair do número errado.">Abrir no navegador</button>
+          <button class="botao" data-remover-alvo="${a.id}">Remover</button>
+        </td>
+      </tr>`).join("");
+    itens.forEach((alvo) => TEXTOS.set(alvo.telefone, alvo.texto));
+    $("corpoFila").onclick = async (evento) => {
+      const enviar = evento.target.closest("[data-enviar-alvo]");
+      if (enviar) {
+        if (!confirm("Enviar agora para este contato?")) return;
+        try {
+          await api(`/campanha/fila/${enviar.dataset.enviarAlvo}/enviar`, "POST");
+          toast("Pedido enviado ao worker. Aguardando confirmação…");
+          await acompanharEnvio(enviar.dataset.enviarAlvo);
+        } catch (erro) { toast(erro.message, true); }
+        return;
+      }
+      const abrir = evento.target.closest("[data-whatsapp-fila]");
+      if (abrir) {
+        const telefone = abrir.dataset.whatsappFila;
+        const texto = TEXTOS.get(telefone) || "";
+        window.open(
+          `https://wa.me/${telefone}?text=${encodeURIComponent(texto)}`,
+          "_blank",
+          "noopener"
+        );
+        return;
+      }
+      const botao = evento.target.closest("[data-remover-alvo]");
+      if (!botao) return;
+      if (!confirm("Remover este alvo da fila?")) return;
+      try {
+        await api(`/campanha/fila/${botao.dataset.removerAlvo}`, "DELETE");
+        toast("Alvo removido da fila.");
+        await carregarFila();
+        await carregarElegiveis();
+      } catch (erro) { toast(erro.message, true); }
+    };
+  }
+
+  async function carregarCompartilhados() {
+    try {
+      const dados = await api("/campanha/compartilhados?minimo=2");
+      const itens = dados.itens || [];
+      $("compartilhadosVazio").hidden = itens.length > 0;
+      $("resumoCompartilhados").textContent =
+        `${numero(dados.total_numeros)} número(s) com 2+ clientes · ${numero(dados.total_clientes)} cadastros envolvidos`;
+      $("corpoCompartilhados").innerHTML = itens.map((grupo) => `
+        <tr>
+          <td>${escapar(grupo.telefone)}</td>
+          <td><span class="tag ${grupo.total >= 4 ? "ruim" : ""}">${grupo.total}</span></td>
+          <td>${grupo.clientes.map((c) => escapar(c.nome)).join(" · ")}</td>
+          <td><button class="botao perigo" data-bloquear-numero="${escapar(grupo.telefone)}">Bloquear</button></td>
+        </tr>`).join("");
+      $("corpoCompartilhados").onclick = async (evento) => {
+        const botao = evento.target.closest("[data-bloquear-numero]");
+        if (!botao) return;
+        const telefone = botao.dataset.bloquearNumero;
+        if (!confirm(`Bloquear ${telefone} para sempre?`)) return;
+        try {
+          await api("/campanha/optouts", "POST", {
+            telefone,
+            motivo: "revisão de número compartilhado",
+          });
+          toast(`Número ${telefone} bloqueado.`);
+          await Promise.all([carregarCompartilhados(), carregarOptouts(), carregarFila(), carregarElegiveis()]);
+        } catch (erro) { toast(erro.message, true); }
+      };
+    } catch (erro) { toast(erro.message, true); }
+  }
+
+  async function carregarOptouts() {
+    const dados = await api("/campanha/optouts");
+    const itens = dados.itens || [];
+    $("optoutVazio").hidden = itens.length > 0;
+    $("corpoOptout").innerHTML = itens.map((o) => `
+      <tr>
+        <td>${escapar(o.telefone)}</td>
+        <td>${escapar(o.motivo || "—")}</td>
+        <td>${escapar(o.origem || "—")}</td>
+        <td>${escapar(o.criado_em)}</td>
+        <td><button class="botao" data-remover="${escapar(o.telefone)}">Remover</button></td>
+      </tr>`).join("");
+    $("corpoOptout").querySelectorAll("[data-remover]").forEach((botao) => {
+      botao.addEventListener("click", async () => {
+        try {
+          await api(`/campanha/optouts/${encodeURIComponent(botao.dataset.remover)}`, "DELETE");
+          toast("Número desbloqueado.");
+          await carregarOptouts();
+          await carregarElegiveis();
+        } catch (erro) { toast(erro.message, true); }
+      });
+    });
+  }
+
+  async function carregar() {
+    if (!CHAVE) { abrirLogin(); return; }
+    try {
+      await carregarConfig();
+      await carregarParametros();
+      await carregarSaude().catch(() => {});
+      await carregarLogs().catch(() => {});
+      await carregarProdutos();
+      await carregarElegiveis();
+      await carregarFila();
+      await carregarOptouts();
+      await carregarCompartilhados();
+    } catch (erro) {
+      if (erro.message !== "Chave inválida") toast(erro.message, true);
+    }
+  }
+
+  /* ------------------------------- ações --------------------------------- */
+
+  $("btnPrevia").addEventListener("click", async () => {
+    try {
+      const dados = await api("/campanha/previa", "POST", {
+        modelo: $("mensagem").value,
+        produto: produtoSelecionado(),
+        limite: 20,
+        variar: $("variar").checked,
+        apenas_unicos: $("apenasUnicos").checked,
+      });
+      $("secPrevia").hidden = false;
+      $("notaPrevia").textContent =
+        `${numero(dados.total)} elegíveis no total · mostrando ${numero(dados.itens.length)} · nada foi gravado`;
+      $("corpoPrevia").innerHTML = dados.itens.map((item, indice) => `
+        <tr>
+          <td>${indice + 1}</td>
+          <td>${escapar(item.nome)}</td>
+          <td>${escapar(item.telefone)}</td>
+          <td>${escapar(item.produto || "—")}</td>
+          <td>${dataBR(item.vencimento)}</td>
+          <td class="msg">${escapar(item.texto)}</td>
+          <td class="acoes-celula">
+            <button class="botao" data-whatsapp="${escapar(item.telefone)}">WhatsApp</button>
+            <button class="botao perigo" data-bloquear-previa="${escapar(item.telefone)}">Bloquear</button>
+          </td>
+        </tr>`).join("");
+      dados.itens.forEach((item) => TEXTOS.set(item.telefone, item.texto));
+      $("corpoPrevia").onclick = async (evento) => {
+        const abrir = evento.target.closest("[data-whatsapp]");
+        if (abrir) {
+          const telefone = abrir.dataset.whatsapp;
+          const texto = TEXTOS.get(telefone) || $("mensagem").value;
+          window.open(
+            `https://wa.me/${telefone}?text=${encodeURIComponent(texto)}`,
+            "_blank",
+            "noopener"
+          );
+          return;
+        }
+        const botao = evento.target.closest("[data-bloquear-previa]");
+        if (!botao) return;
+        const telefone = botao.dataset.bloquearPrevia;
+        if (!confirm(`Bloquear ${telefone} para sempre?`)) return;
+        try {
+          await api("/campanha/optouts", "POST", { telefone, motivo: "bloqueado na prévia" });
+          toast(`Número ${telefone} bloqueado.`);
+          await Promise.all([carregarCompartilhados(), carregarOptouts(), carregarFila(), carregarElegiveis()]);
+          botao.closest("tr").remove();
+        } catch (erro) { toast(erro.message, true); }
+      };
+      $("secPrevia").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnFila").addEventListener("click", async () => {
+    if (!confirm("Gravar os elegíveis na fila da campanha? Nada será enviado.")) return;
+    try {
+      const dados = await api("/campanha/fila", "POST", {
+        modelo: $("mensagem").value,
+        produto: produtoSelecionado(),
+        limite: Number($("quantidade").value) || 5,
+        variar: $("variar").checked,
+        apenas_unicos: $("apenasUnicos").checked,
+      });
+      toast(`${dados.criados} alvo(s) gravado(s) na fila.`);
+      await carregarFila();
+      await carregarElegiveis();
+      await calcularPlano();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  function listaNumeros() {
+    return {
+      numeros: $("numeros").value.trim(),
+      modelo: $("mensagem").value.trim() || null,
+    };
+  }
+
+  $("btnLerPlanilha").addEventListener("click", async () => {
+    const arquivo = $("arquivoPlanilha").files[0];
+    if (!arquivo) { toast("Escolha um arquivo .xlsx, .xlsb ou .csv.", true); return; }
+    const corpo = new FormData();
+    corpo.append("arquivo", arquivo);
+    try {
+      const resposta = await fetch("/campanha/planilha", {
+        method: "POST",
+        headers: { "X-API-Key": CHAVE },
+        body: corpo,
+      });
+      const dados = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) {
+        throw new Error(typeof dados.detail === "string" ? dados.detail : `HTTP ${resposta.status}`);
+      }
+      $("numeros").value = dados.linhas;
+      $("resumoPlanilha").textContent =
+        `${numero(dados.total)} linha(s) com telefone` +
+        (dados.sem_telefone ? ` · ${numero(dados.sem_telefone)} sem telefone` : "") +
+        (dados.cortado ? " · cortado em 20.000" : "");
+      toast("Planilha lida. Confira a lista e clique em Conferir lista.");
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  async function conferirNumeros() {
+    const dados = await api("/campanha/numeros/previa", "POST", listaNumeros());
+    $("previaNumeros").hidden = false;
+    $("corpoNovosNumeros").innerHTML = (dados.novos || []).map((i) => `
+      <tr><td>${escapar(i.telefone)}</td><td>${escapar(i.nome || "—")}</td>
+      <td>${escapar(i.produto || "—")}</td><td>${dataBR(i.vencimento)}</td></tr>`).join("");
+    const motivos = {};
+    (dados.ignorados || []).forEach((i) => {
+      motivos[i.motivo] = (motivos[i.motivo] || 0) + 1;
+    });
+    const detalhe = Object.entries(motivos).map(([m, q]) => `${q} ${m}`).join(" · ");
+    $("notaIgnorados").innerHTML =
+      `<b>${numero(dados.total_novos)}</b> entram na fila` +
+      (dados.total_ignorados
+        ? ` · <b>${numero(dados.total_ignorados)}</b> fora${detalhe ? `: ${escapar(detalhe)}` : ""}`
+        : "") +
+      ((dados.novos || []).length < dados.total_novos
+        ? ` · mostrando os ${numero((dados.novos || []).length)} primeiros`
+        : "");
+    $("resumoNumeros").textContent =
+      `${numero(dados.total_novos)} novo(s) · ${numero(dados.total_ignorados)} fora`;
+  }
+
+  $("btnConferirNumeros").addEventListener("click", async () => {
+    if (!$("numeros").value.trim()) { toast("Cole a lista ou leia uma planilha.", true); return; }
+    try { await conferirNumeros(); } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnAdicionarNumeros").addEventListener("click", async () => {
+    if (!$("numeros").value.trim()) { toast("Cole a lista ou leia uma planilha.", true); return; }
+    if (!confirm("Gravar esses números na fila? Nada será enviado agora.")) return;
+    try {
+      const dados = await api("/campanha/numeros", "POST", listaNumeros());
+      toast(
+        `${dados.adicionados} número(s) na fila.` +
+        (dados.ignorados.length ? ` ${dados.ignorados.length} ficaram de fora.` : "")
+      );
+      $("numeros").value = "";
+      $("previaNumeros").hidden = true;
+      $("resumoNumeros").textContent = "";
+      $("resumoPlanilha").textContent = "";
+      $("arquivoPlanilha").value = "";
+      await carregarFila();
+      await carregarElegiveis().catch(() => {});
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  async function carregarContatos() {
+    const dados = await api("/campanha/contatos");
+    $("resumoContatos").textContent = dados.total
+      ? `${numero(dados.total)} contato(s) · ${dados.atualizado_em || "sem data"}`
+      : "nenhuma lista recebida ainda";
+    $("btnUsarContatos").disabled = !dados.total;
+    return dados;
+  }
+
+  $("btnPedirContatos").addEventListener("click", async () => {
+    try {
+      const pedido = await api("/campanha/contatos/pedir", "POST", {});
+      toast("Pedido enviado ao worker. Lendo a agenda…");
+      const limite = Date.now() + 240000;
+      while (Date.now() < limite) {
+        await new Promise((resolver) => setTimeout(resolver, 3000));
+        let dados;
+        try { dados = await api("/campanha/contatos"); } catch { continue; }
+        if (dados.total) {
+          $("resumoContatos").textContent = `${numero(dados.total)} contato(s) recebidos…`;
+        }
+        if (dados.completo_em && dados.completo_em >= pedido.pedido_em) {
+          await carregarContatos();
+          toast(`${numero(dados.total)} contato(s) recebidos.`);
+          return;
+        }
+      }
+      toast("A lista não chegou. Confira se o worker está online.", true);
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnUsarContatos").addEventListener("click", async () => {
+    try {
+      const dados = await carregarContatos();
+      if (!dados.total || !dados.linhas) { toast("Nenhuma lista recebida ainda.", true); return; }
+      $("numeros").value = dados.linhas;
+      $("numeros").scrollIntoView({ behavior: "smooth", block: "center" });
+      $("resumoPlanilha").textContent = `${numero(dados.total)} contato(s) na conferência`;
+      toast("Lista copiada. Confira e clique em Gravar na fila.");
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  async function calcularPlano() {
+    const dados = await api("/campanha/plano");
+    $("secPlano").hidden = !dados.dias || dados.dias.length === 0;
+    $("notaPlano").textContent = dados.estimativa || "fila vazia";
+    $("corpoPlano").innerHTML = (dados.dias || []).map((dia) => `
+      <tr>
+        <td>${dataBR(dia.data)}</td>
+        <td>${numero(dia.quantidade)}</td>
+        <td>${escapar((dia.janelas || []).join(" · "))}</td>
+      </tr>`).join("");
+  }
+
+  $("btnPlano").addEventListener("click", async () => {
+    try {
+      await calcularPlano();
+      $("secPlano").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnLimparFila").addEventListener("click", async () => {
+    if (!confirm("Remover da fila todos os alvos ainda pendentes?")) return;
+    try {
+      const dados = await api("/campanha/fila", "DELETE");
+      toast(`${dados.removidos} alvo(s) removido(s).`);
+      await carregarFila();
+      await carregarElegiveis();
+      $("secPlano").hidden = true;
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnBloquear").addEventListener("click", async () => {
+    try {
+      const dados = await api("/campanha/optouts", "POST", {
+        telefone: $("optTelefone").value,
+        motivo: $("optMotivo").value,
+      });
+      toast(`Número ${dados.telefone} bloqueado. ${dados.removidos_da_fila} removido(s) da fila.`);
+      $("optTelefone").value = "";
+      $("optMotivo").value = "";
+      await carregarOptouts();
+      await carregarFila();
+      await carregarElegiveis();
+      await carregarCompartilhados();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnSalvarNumero").addEventListener("click", async () => {
+    try {
+      const dados = await api("/campanha/numero", "POST", {
+        numero: $("numeroRemetente").value,
+        teste: $("numeroTeste").value || null,
+      });
+      toast(
+        `Remetente: ${formatarTelefone(dados.numero_remetente)} · ` +
+        `teste: ${dados.numero_teste ? formatarTelefone(dados.numero_teste) : "não definido"}`
+      );
+      await carregarConfig();
+      await carregarElegiveis();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnSalvarParametros").addEventListener("click", async () => {
+    try {
+      const dados = await api("/campanha/parametros", "POST", lerParametrosDoFormulario());
+      preencherParametros(dados.parametros);
+      toast("Parâmetros salvos. Valem a partir do próximo envio.");
+      await carregarConfig();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnRestaurarParametros").addEventListener("click", async () => {
+    if (!confirm("Restaurar todos os parâmetros de envio para o padrão?")) return;
+    try {
+      const dados = await api("/campanha/parametros", "DELETE");
+      preencherParametros(dados.parametros);
+      toast("Parâmetros padrão restaurados.");
+      await carregarConfig();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  /* -------------------------------- robô --------------------------------- */
+
+  const CHAVE_AUTO_ROBO = "campanha.autoRobo";
+  let autoRobo = localStorage.getItem(CHAVE_AUTO_ROBO) !== "0";
+  let roboTentado = false;
+
+  function pintarRobo(dados) {
+    const etiqueta = $("roboStatus");
+    if (dados.online) {
+      etiqueta.textContent = dados.modo === "manual" ? "robô manual online" : "robô automático online";
+      etiqueta.className = "tag ok";
+    } else if (dados.pid_vivo) {
+      etiqueta.textContent = "robô iniciando…";
+      etiqueta.className = "tag";
+    } else {
+      etiqueta.textContent = "robô desligado";
+      etiqueta.className = "tag";
+    }
+    $("chkAutoRobo").checked = autoRobo;
+    const detalhe = [];
+    if (dados.numero_conectado) detalhe.push(`conectado: +${dados.numero_conectado}`);
+    if (dados.pid) detalhe.push(`PID ${dados.pid}`);
+    if (dados.visto_em) detalhe.push(`visto ${dados.visto_em}`);
+    if (!dados.online && !dados.pid_vivo) {
+      detalhe.push("“Ligar robô” sobe em modo manual; nada sai sozinho");
+    }
+    if (
+      dados.numero_conectado &&
+      CFG && CFG.numero_remetente &&
+      dados.numero_conectado !== CFG.numero_remetente
+    ) {
+      detalhe.push("⚠ o remetente da campanha ainda é outro — ajuste em Mostrar tudo › Números da campanha");
+    }
+    $("roboAviso").textContent = detalhe.join(" · ") || "—";
+  }
+
+  async function carregarRobo() {
+    const dados = await api("/campanha/worker");
+    pintarRobo(dados);
+    return dados;
+  }
+
+  async function esperarRobo(tentativas = 14) {
+    for (let i = 0; i < tentativas; i++) {
+      await new Promise((resolver) => setTimeout(resolver, 3000));
+      let dados;
+      try { dados = await api("/campanha/worker"); } catch { continue; }
+      pintarRobo(dados);
+      if (dados.online) {
+        await carregarSaude().catch(() => {});
+        return dados;
+      }
+      if (!dados.pid_vivo) return null;
+    }
+    return null;
+  }
+
+  async function ligarRobo(modo) {
+    try {
+      const dados = await api("/campanha/worker/ligar", "POST", { modo });
+      if (dados.worker) pintarRobo(dados.worker);
+      toast(dados.ligado ? "Robô subindo. Conectando ao WhatsApp…" : (dados.motivo || "Robô já estava ligado."));
+      if (!dados.ligado) return;
+      const pronto = await esperarRobo();
+      toast(
+        pronto ? `Robô online (${pronto.modo}).`
+               : "O robô ainda não conectou. Veja o log em Saúde do envio.",
+        !pronto
+      );
+    } catch (erro) { toast(erro.message, true); }
+  }
+
+  $("btnLigarRobo").addEventListener("click", () => { ligarRobo("manual"); });
+
+  async function ligarPareamento() {
+    try {
+      const dados = await api("/campanha/worker/ligar", "POST", { modo: "parear" });
+      if (dados.worker) pintarRobo(dados.worker);
+      if (!dados.ligado) {
+        toast(dados.motivo || "Já existe um robô aberto.", true);
+        return;
+      }
+      toast("Abrindo o WhatsApp com o QR. Escaneie com o celular do novo número.");
+      for (let i = 0; i < 50; i++) {
+        await new Promise((resolver) => setTimeout(resolver, 3000));
+        let atual;
+        try { atual = await api("/campanha/worker"); } catch { continue; }
+        pintarRobo(atual);
+        if (atual.numero_conectado) {
+          toast(`Novo número conectado: +${atual.numero_conectado}. Clique em "Ligar robô (manual)" para trabalhar com ele.`);
+          await carregarConfig().catch(() => {});
+          return;
+        }
+      }
+      toast("Não confirmei o pareamento. Veja a janela do WhatsApp ou o log.", true);
+    } catch (erro) { toast(erro.message, true); }
+  }
+
+  $("btnTrocarNumero").addEventListener("click", async () => {
+    const ok = confirm(
+      "Trocar o número do WhatsApp da campanha?\n\n" +
+      "1) O número atual será DESVINCULADO (sai da lista de aparelhos do celular).\n" +
+      "2) Uma janela do Chrome abre com o QR code.\n" +
+      "3) Você escaneia com o celular do novo número.\n\n" +
+      "Nenhuma mensagem é enviada nesse processo."
+    );
+    if (!ok) return;
+    autoRobo = false;
+    localStorage.setItem(CHAVE_AUTO_ROBO, "0");
+    try {
+      toast("Desconectando o número atual… pode levar até 1 minuto.");
+      await api("/campanha/worker/desconectar", "POST", {});
+      pintarRobo({ online: false, pid_vivo: false });
+      await ligarPareamento();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnLigarAuto").addEventListener("click", async () => {
+    const resposta = prompt(
+      "Ligar o robô em modo AUTOMÁTICO (envia sozinho, respeitando cota e intervalo)?\nDigite ENVIAR para confirmar."
+    );
+    if (resposta === null) return;
+    if (resposta.trim().toUpperCase() !== "ENVIAR") {
+      toast("Cancelado: digite ENVIAR para ligar o automático.", true);
+      return;
+    }
+    await ligarRobo("enviar");
+  });
+
+  $("btnDesligarRobo").addEventListener("click", async () => {
+    if (!confirm("Desligar o robô? O WhatsApp fica pareado para a próxima vez.")) return;
+    autoRobo = false;
+    localStorage.setItem(CHAVE_AUTO_ROBO, "0");
+    try {
+      const dados = await api("/campanha/worker/desligar", "POST", {});
+      toast(dados.pedido ? "Pedido de desligamento enviado…" : (dados.motivo || "Nada para desligar."));
+      for (let i = 0; i < 6; i++) {
+        await new Promise((resolver) => setTimeout(resolver, 3000));
+        let atual;
+        try { atual = await api("/campanha/worker"); } catch { continue; }
+        pintarRobo(atual);
+        if (!atual.online && !atual.pid_vivo) {
+          toast("Robô desligado.");
+          await carregarSaude().catch(() => {});
+          return;
+        }
+      }
+      await api("/campanha/worker/desligar", "POST", { forcar: true });
+      await carregarRobo().catch(() => {});
+      toast("O robô não respondeu; encerrado à força.");
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("chkAutoRobo").addEventListener("change", () => {
+    autoRobo = $("chkAutoRobo").checked;
+    localStorage.setItem(CHAVE_AUTO_ROBO, autoRobo ? "1" : "0");
+    toast(autoRobo ? "O painel vai ligar o robô sozinho ao abrir." : "O painel não liga mais o robô sozinho.");
+  });
+
+  async function iniciarRoboSePreciso() {
+    if (roboTentado) return;
+    roboTentado = true;
+    if (!autoRobo) return;
+    let dados;
+    try { dados = await api("/campanha/worker"); } catch { return; }
+    pintarRobo(dados);
+    if (dados.online || dados.pid_vivo) return;
+    await ligarRobo("manual");
+  }
+
+  $("btnAtualizarSaude").addEventListener("click", async () => {
+    try {
+      await carregarSaude();
+      toast("Saúde atualizada.");
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnAtualizarLogs").addEventListener("click", async () => {
+    try {
+      await carregarLogs();
+      toast("Log atualizado.");
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnExportar").addEventListener("click", async () => {
+    try {
+      const quantidade = Number($("quantidade").value) || 5;
+      const dados = await api(`/campanha/exportar?limite=${quantidade}`, "POST");
+      toast(`${dados.quantidade} contato(s) exportado(s) para ${dados.nome}. Nada foi enviado.`);
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnAtivar").addEventListener("click", async () => {
+    const confirmacao = prompt(
+      "Ligar a campanha em modo real (envio pelo WhatsApp)?\nDigite ENVIAR para confirmar."
+    );
+    if (confirmacao === null) return;
+    if (confirmacao.trim().toUpperCase() !== "ENVIAR") {
+      toast("Ativacao cancelada: digite ENVIAR para confirmar.", true);
+      return;
+    }
+    try {
+      await api("/campanha/ativar", "POST", { confirmo: "ENVIAR" });
+      toast("Campanha ativada.");
+      await carregarConfig();
+      await carregarSaude();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnPausar").addEventListener("click", async () => {
+    try {
+      await api("/campanha/pausar", "POST", { motivo: "" });
+      toast("Campanha pausada.");
+      await carregarConfig();
+      await carregarSaude();
+    } catch (erro) { toast(erro.message, true); }
+  });
+
+  $("btnAtualizar").addEventListener("click", carregar);
+  $("btnMostrarTudo").addEventListener("click", () => {
+    const tudo = document.body.classList.contains("mostrar-tudo");
+    localStorage.setItem(CHAVE_MOSTRAR_TUDO, tudo ? "0" : "1");
+    aplicarModoTela();
+  });
+  aplicarModoTela();
+  $("filtroProduto").addEventListener("change", async () => {
+    try { await carregarElegiveis(); } catch (erro) { toast(erro.message, true); }
+  });
+  $("apenasUnicos").addEventListener("change", async () => {
+    try { await carregarElegiveis(); } catch (erro) { toast(erro.message, true); }
+  });
+
+  /* -------------------------------- login -------------------------------- */
+
+  $("btnEntrar").addEventListener("click", () => {
+    const valor = $("campoChave").value.trim();
+    if (!valor) return;
+    CHAVE = valor;
+    localStorage.setItem("assinaturas.apiKey", CHAVE);
+    fecharLogin();
+    carregar();
+  });
+  $("campoChave").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnEntrar").click(); });
+  $("btnSair").addEventListener("click", () => {
+    localStorage.removeItem("assinaturas.apiKey");
+    CHAVE = "";
+    abrirLogin();
+  });
+
+  carregar();
+  carregarContatos().catch(() => {});
+  carregarRobo().catch(() => {});
+  iniciarRoboSePreciso().catch(() => {});
+</script>
+</body>
+</html>

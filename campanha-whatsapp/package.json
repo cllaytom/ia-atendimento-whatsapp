@@ -1,0 +1,19 @@
+{
+  "name": "connecttv-campanha-whatsapp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Worker da campanha (fase 2): consulta a API local e envia pelo WhatsApp Web.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "simular": "node worker.cjs",
+    "parear": "node worker.cjs --parear",
+    "enviar": "node worker.cjs --enviar",
+    "check": "node --check worker.cjs"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "1.34.8"
+  }
+}

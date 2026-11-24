@@ -320,19 +320,11 @@ def test_pedido_de_atendente_humano():
     assert dados["conversa"]["motivo_transferencia"] == "Cliente pediu atendimento humano"
 
 
-def test_duvida_fora_do_catalogo_nao_transfere_e_entra_na_fila(monkeypatch, tmp_path):
-    _isolar_conhecimento(monkeypatch, tmp_path)
+def test_duvida_fora_do_catalogo_escala_para_humano():
     dados = criar("Cliente Cartão")
     dados = enviar(dados["conversa"]["id"], "vocês aceitam cartão de crédito?")
-
-    assert dados["conversa"]["estado"] == "ia"
-    assert dados["conversa"]["motivo_transferencia"] is None
-    assert "confirmar" in ultimo_texto(dados).lower()
-
-    fila = cliente.get("/atendimento/duvidas", headers=HEADERS).json()
-    assert any(
-        duvida["conversa_id"] == dados["conversa"]["id"] for duvida in fila["itens"]
-    )
+    assert dados["conversa"]["estado"] == "aguardando_humano"
+    assert "fora do catálogo" in dados["conversa"]["motivo_transferencia"]
 
 
 def _isolar_conhecimento(monkeypatch, tmp_path):
@@ -345,7 +337,7 @@ def _criar_duvida(contato="Cliente Aprendizado"):
     dados = criar(contato)
     conversa_id = dados["conversa"]["id"]
     dados = enviar(conversa_id, "o iptv tem canais de futebol?")
-    assert dados["conversa"]["estado"] == "ia"
+    assert dados["conversa"]["estado"] == "aguardando_humano"
 
     fila = cliente.get("/atendimento/duvidas", headers=HEADERS).json()
     item = next(
@@ -402,14 +394,7 @@ def test_resposta_humana_sem_salvar_nao_altera_a_base(monkeypatch, tmp_path):
 
     dados = criar("Cliente Sem Resposta")
     dados = enviar(dados["conversa"]["id"], "o iptv tem canais de futebol?")
-    assert dados["conversa"]["estado"] == "ia"
-    assert any(
-        "Vou confirmar" in mensagem["texto"] for mensagem in dados["mensagens"]
-    )
-    assert not any(
-        "canais de futebol" in mensagem["texto"] and mensagem["autor"] == "ia"
-        for mensagem in dados["mensagens"]
-    )
+    assert dados["conversa"]["estado"] == "aguardando_humano"
 
 
 def test_duvida_ignorada_sai_da_fila(monkeypatch, tmp_path):
@@ -475,89 +460,5 @@ def test_base_nao_responde_assunto_fora_do_produto(monkeypatch, tmp_path):
     dados = criar("Cliente Fora do Produto")
     dados = enviar(dados["conversa"]["id"], "quem ganhou o campeonato?")
     assert "Não falamos sobre isso" not in ultimo_texto(dados)
-    assert dados["conversa"]["estado"] == "ia"
-
-
-RAIZ = Path(__file__).resolve().parents[1]
-
-
-def test_pergunta_de_seguranca_responde_sem_transferir(monkeypatch):
-    monkeypatch.setattr(
-        atendimento_config, "ARQUIVO_CONHECIMENTO", RAIZ / "dados" / "conhecimento.json"
-    )
-    dados = criar("Cliente Seguro")
-    conversa_id = dados["conversa"]["id"]
-
-    for pergunta in ("é seguro ?", "a vpn é segura?"):
-        dados = enviar(conversa_id, pergunta)
-        assert dados["conversa"]["estado"] == "ia"
-        ultima = dados["mensagens"][-1]
-        texto = ultima["texto"].lower()
-        assert ultima["autor"] == "ia"
-        assert "criptografad" in texto
-        assert "atendente" not in texto
-
-
-def test_resposta_da_duvida_pode_ser_enviada_ao_cliente(monkeypatch, tmp_path):
-    _isolar_conhecimento(monkeypatch, tmp_path)
-    item = _criar_duvida("Cliente Resposta Direta")
-
-    resposta = cliente.post(
-        f"/atendimento/duvidas/{item['id']}/responder",
-        headers=HEADERS,
-        json={
-            "resposta": "Sim! O IPTV Completo tem canais de futebol.",
-            "salvar_na_base": True,
-            "enviar_ao_cliente": True,
-        },
-    )
-    assert resposta.status_code == 200, resposta.text
-    corpo = resposta.json()
-    assert corpo["status"] == "respondida"
-    assert corpo["enviado_ao_cliente"] is True
-
-    detalhe = cliente.get(
-        f"/atendimento/conversas/{item['conversa_id']}", headers=HEADERS
-    ).json()
-    assert detalhe["conversa"]["estado"] == "ia"
-    assert detalhe["mensagens"][-1]["autor"] == "humano"
-    assert "futebol" in detalhe["mensagens"][-1]["texto"]
-
-
-def test_historico_do_whatsapp_vira_candidatos_de_aprendizado(monkeypatch, tmp_path):
-    _isolar_conhecimento(monkeypatch, tmp_path)
-    historico = """
-12/11/2026 10:00 - Maria: oi
-12/11/2026 10:00 - ConnectTV: Olá! Como posso ajudar?
-12/11/2026 10:01 - Maria: é seguro contratar?
-12/11/2026 10:02 - ConnectTV: Sim! A conexão é criptografada.
-12/11/2026 10:03 - Maria: <Arquivo de mídia oculto>
-12/11/2026 10:04 - Maria: e o iptv tem futebol?
-12/11/2026 10:05 - ConnectTV: Sim, o plano completo tem todos os streamers.
-""".strip()
-
-    resposta = cliente.post(
-        "/atendimento/historico/analisar",
-        headers=HEADERS,
-        json={"texto": historico, "negocio": "ConnectTV"},
-    )
-    assert resposta.status_code == 200, resposta.text
-    dados = resposta.json()
-    assert dados["total"] == 2
-    perguntas = [item["pergunta"] for item in dados["candidatos"]]
-    assert "é seguro contratar?" in perguntas
-    assert "e o iptv tem futebol?" in perguntas
-    assert all(item["resposta"] for item in dados["candidatos"])
-
-
-def test_historico_aceita_formato_com_colchetes():
-    from app.atendimento import historico
-
-    dados = historico.analisar(
-        "[12/11/2026, 14:33:26] João: quanto custa a internet?\n"
-        "[12/11/2026, 14:33:30] ConnectTV: R$ 15 no primeiro mês.",
-        negocio="ConnectTV",
-    )
-    assert dados["total"] == 1
-    assert dados["candidatos"][0]["contato"] == "João"
+    assert dados["conversa"]["estado"] == "aguardando_humano"
 

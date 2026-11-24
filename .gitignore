@@ -1,22 +1,75 @@
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
 __pycache__/
-*.pyc
-.env
+*.py[cod]
 .pytest_cache/
-dados/*.db
-dados/*.db-journal
+.venv/
+venv/
 
-# Dados privados locais
-/.local-auth/
-/backups-login/
-/backups-layout/
-/painel-importacao/
-__pycache__/
-*.pyc
+# ---------------------------------------------------------------------------
+# Segredos e certificados (NUNCA versionar)
+# ---------------------------------------------------------------------------
 .env
 .env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# ---------------------------------------------------------------------------
+# Bancos, logs e backups locais
+# ---------------------------------------------------------------------------
+dados/
 *.db
-*.db-wal
-*.db-shm
+*.db-*
+*.sqlite
 *.sqlite3
-*.sqlite3-wal
-*.sqlite3-shm
+*.sqlite3-*
+*.log
+*.bak
+*.bak-*
+*.backup
+*.backup-*
+*.antes-*
+*.zip
+backups/
+backup-*/
+backups_*/
+
+# ---------------------------------------------------------------------------
+# Sessao do WhatsApp e cache do Node
+# ---------------------------------------------------------------------------
+campanha-sessao/
+.wwebjs_cache/
+.wwebjs_auth/
+session/
+node_modules/
+
+# ---------------------------------------------------------------------------
+# Listas e dumps locais com dados de clientes
+# ---------------------------------------------------------------------------
+listas_para_revisar/
+lista_TODOS_txt.txt
+resultado_*.txt
+txt_*.txt
+*.xls
+*.xlsx
+*.xlsb
+*.csv
+
+# ---------------------------------------------------------------------------
+# Projetos separados (cada um tem seu proprio repositorio/segredos)
+# ---------------------------------------------------------------------------
+ia atendimento/
+financeiro android/
+
+# ---------------------------------------------------------------------------
+# Sistema
+# ---------------------------------------------------------------------------
+Thumbs.db
+Desktop.ini
+.DS_Store
