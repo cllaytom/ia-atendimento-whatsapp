@@ -8,7 +8,7 @@ from .texto import extrair_plano_iptv, tem
 # ---------------------------------------------------------------------------
 INTERNET_PRIMEIRO = 15.0
 INTERNET_DEPOIS = 20.0
-INTERNET_TRIAL_HORAS = 4
+INTERNET_TRIAL_HORAS = 3
 
 IPTV_COMPLETO_PRIMEIRO = 30.0
 IPTV_COMPLETO_DEPOIS = 35.0
@@ -164,7 +164,8 @@ def pergunta_instalou() -> str:
 
 def confirmar_internet() -> str:
     return (
-        "Quer ativar agora seu *teste grátis de 4h* ou o plano de "
+        "Quer ativar agora seu *teste grátis de "
+        f"{INTERNET_TRIAL_HORAS}h* ou o plano de "
         f"*{brl(INTERNET_PRIMEIRO)} no 1º mês* (depois {brl(INTERNET_DEPOIS)})? (sim/não)"
     )
 
