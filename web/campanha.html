@@ -119,7 +119,10 @@
     border: 1px solid rgba(79, 124, 255, .4); white-space: nowrap;
   }
   .tag.ok { background: rgba(47, 207, 143, .12); border-color: rgba(47, 207, 143, .4); color: #a9f0d1; }
-  .tag.ruim { background: rgba(255, 92, 122, .12); border-color: rgba(255, 92, 122, .4); color: #ffc3ce; }
+  .tag.auto { background: rgba(79, 124, 255, .18); border-color: rgba(79, 124, 255, .5); color: #cfd9ff; }
+  .tag.iniciando { background: rgba(245, 184, 61, .12); border-color: rgba(245, 184, 61, .45); color: #ffe0a3; }
+  .tag.off { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .18); color: var(--texto-fraco); }
+  #roboStatus { font-size: 12px; font-weight: 700; padding: 5px 10px; }
   .contador { color: var(--texto-fraco); font-size: 12px; }
   .nota { color: var(--texto-fraco); font-size: 12px; margin-top: 8px; }
   pre.log {
@@ -288,13 +291,13 @@
   <section class="linha" id="secRobo">
     <article class="card larga">
       <h2><span class="num">1</span>Robô do WhatsApp</h2>
-      <div class="nota">É o robô que segura a conexão com o WhatsApp. Em <b>manual</b> ele fica conectado e só envia quando você clica em <b>Enviar agora</b>. Em <b>automático</b> ele envia sozinho, respeitando cota, intervalo e (se ligado) as janelas de horário.</div>
+      <div class="nota">É o robô que segura a conexão com o WhatsApp. Em <b>manual</b> ele fica conectado e só envia quando você clica em <b>Enviar agora</b>. Em <b>automático</b> ele envia sozinho, respeitando cota, intervalo e (se ligado) as janelas de horário. O selo mostra o estado atual; o botão vermelho <b>Desligar robô</b> só fica ativo quando há robô para encerrar.</div>
       <div class="ferramentas">
-        <span class="tag" id="roboStatus">—</span>
+        <span class="tag off" id="roboStatus" aria-live="polite">● ROBÔ DESLIGADO</span>
         <button class="botao primario" id="btnLigarRobo">Ligar robô (manual)</button>
         <button class="botao" id="btnLigarAuto">Ligar automático</button>
         <button class="botao" id="btnTrocarNumero">Trocar número do WhatsApp</button>
-        <button class="botao perigo" id="btnDesligarRobo">Desligar robô</button>
+        <button class="botao perigo" id="btnDesligarRobo" title="Encerra o robô; fica apagado quando ele já está desligado">Desligar robô</button>
         <label><input type="checkbox" id="chkAutoRobo"> ligar sozinho ao abrir o painel</label>
       </div>
       <div class="nota" id="roboAviso">—</div>
@@ -1173,16 +1176,25 @@
 
   function pintarRobo(dados) {
     const etiqueta = $("roboStatus");
+    const iniciando = !dados.online && Boolean(dados.pid_vivo);
+    const ocupado = Boolean(dados.online) || iniciando;
     if (dados.online) {
-      etiqueta.textContent = dados.modo === "manual" ? "robô manual online" : "robô automático online";
-      etiqueta.className = "tag ok";
-    } else if (dados.pid_vivo) {
-      etiqueta.textContent = "robô iniciando…";
-      etiqueta.className = "tag";
+      const modo = dados.modo === "manual" ? "MANUAL" : "AUTOMÁTICO";
+      etiqueta.textContent = `● ROBÔ LIGADO · ${modo}`;
+      etiqueta.className = `tag ${dados.modo === "manual" ? "ok" : "auto"}`;
+    } else if (iniciando) {
+      etiqueta.textContent = "● ROBÔ INICIANDO…";
+      etiqueta.className = "tag iniciando";
     } else {
-      etiqueta.textContent = "robô desligado";
-      etiqueta.className = "tag";
+      etiqueta.textContent = "● ROBÔ DESLIGADO";
+      etiqueta.className = "tag off";
     }
+    $("btnLigarRobo").disabled = ocupado;
+    $("btnLigarAuto").disabled = ocupado;
+    const dicaTroca = ocupado ? "Desligue o robô antes de trocar o modo." : "";
+    $("btnLigarRobo").title = dicaTroca;
+    $("btnLigarAuto").title = dicaTroca;
+    $("btnDesligarRobo").disabled = !ocupado;
     $("chkAutoRobo").checked = autoRobo;
     const detalhe = [];
     if (dados.numero_conectado) detalhe.push(`conectado: +${dados.numero_conectado}`);
@@ -1222,9 +1234,11 @@
     return null;
   }
 
-  async function ligarRobo(modo) {
+  async function ligarRobo(modo, confirmo = "") {
     try {
-      const dados = await api("/campanha/worker/ligar", "POST", { modo });
+      const corpo = { modo };
+      if (confirmo) corpo.confirmo = confirmo;
+      const dados = await api("/campanha/worker/ligar", "POST", corpo);
       if (dados.worker) pintarRobo(dados.worker);
       toast(dados.ligado ? "Robô subindo. Conectando ao WhatsApp…" : (dados.motivo || "Robô já estava ligado."));
       if (!dados.ligado) return;
@@ -1291,7 +1305,7 @@
       toast("Cancelado: digite ENVIAR para ligar o automático.", true);
       return;
     }
-    await ligarRobo("enviar");
+    await ligarRobo("enviar", "ENVIAR");
   });
 
   $("btnDesligarRobo").addEventListener("click", async () => {
@@ -1418,6 +1432,24 @@
   carregarContatos().catch(() => {});
   carregarRobo().catch(() => {});
   iniciarRoboSePreciso().catch(() => {});
+
+  // O envio automatico muda a fila sem clique no painel: atualiza so as partes
+  // que mudam, a cada 10s, enquanto a aba estiver aberta.
+  let atualizandoAuto = false;
+  setInterval(async () => {
+    if (atualizandoAuto || document.visibilityState !== "visible" || !CHAVE) return;
+    atualizandoAuto = true;
+    try {
+      await Promise.all([
+        carregarFila().catch(() => {}),
+        carregarSaude().catch(() => {}),
+        carregarRobo().catch(() => {}),
+        carregarLogs().catch(() => {}),
+      ]);
+    } finally {
+      atualizandoAuto = false;
+    }
+  }, 10000);
 </script>
 </body>
 </html>

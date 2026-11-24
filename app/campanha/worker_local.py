@@ -221,9 +221,13 @@ def desligar(forcar: bool = False) -> dict:
         time.sleep(1)
         if not pid or not _pid_vivo(pid):
             armazenamento.limpar_worker()
-            armazenamento.limpar_pedido_parada()
+            if not pid:
+                armazenamento.limpar_pedido_parada()
+            # Com PID registrado, deixa o aviso para um eventual pulso final.
             return {
                 "desligado": True,
+                "pedido": True,
+                "pedido_em": momento,
                 "pid": pid,
                 "motivo": "encerrado pelo pedido do painel",
             }
@@ -243,6 +247,8 @@ def desligar(forcar: bool = False) -> dict:
     armazenamento.limpar_pedido_parada()
     return {
         "desligado": True,
+        "pedido": True,
+        "pedido_em": momento,
         "pid": pid,
         "motivo": "encerrado a forca apos nao responder ao pedido",
         "processos_encerrados": alvos,

@@ -712,8 +712,22 @@ async function enviar(opcoes, api, chave) {
 
       const depois = await api.estado().catch(() => null);
       if (depois && depois.esperar_segundos > 0) {
-        log(`intervalo antes do proximo: ${depois.esperar_segundos}s`);
-        await dormir(depois.esperar_segundos * 1000);
+        const total = Number(depois.esperar_segundos) || 0;
+        log(`intervalo antes do proximo: ${total}s`);
+        // Continua batendo no painel durante a espera: sem isso ele aparece
+        // como desligado quando o intervalo passa de 45s.
+        let restante = total;
+        while (restante > 0 && !parado) {
+          const passo = Math.min(5, restante);
+          await dormir(passo * 1000);
+          restante -= passo;
+          const pulso = await api.pulso("auto").catch(() => null);
+          if (pulso && pulso.parar) {
+            log("pedido do painel: encerrando o worker...");
+            parado = true;
+            break;
+          }
+        }
       }
     }
   } finally {
