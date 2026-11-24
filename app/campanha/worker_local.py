@@ -111,7 +111,15 @@ def ligar(modo: str = "manual") -> dict:
     if not SCRIPT.is_file():
         raise WorkerIndisponivel(f"worker nao encontrado em {SCRIPT}")
 
+    pid_salvo = armazenamento.worker_pid()
+    if pid_salvo and not _pid_vivo(pid_salvo):
+        armazenamento.limpar_worker()
+
     atual = status()
+    if atual["online"] and not atual["pid_vivo"]:
+        armazenamento.limpar_worker()
+        atual = status()
+
     if atual["online"]:
         return {
             "ligado": False,
