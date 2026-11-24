@@ -24,8 +24,6 @@ from . import armazenamento, config
 
 PASTA = config.BASE_DIR / "campanha-whatsapp"
 SCRIPT = PASTA / "worker.cjs"
-# Separado do campanha-worker.log: aquele o proprio worker escreve. Este guarda
-# o que sairia no console (stdout/stderr), util quando o Node morre na largada.
 SAIDA = config.BASE_DIR / "dados" / "campanha-worker-saida.log"
 
 MODOS = {
@@ -50,15 +48,12 @@ def _versao(chave: str) -> tuple[int, ...]:
 
 
 def achar_node() -> str:
-    """Mesma procura do start.cmd: CAMPANHA_NODE, PATH e depois o fnm."""
     explicito = os.getenv("CAMPANHA_NODE", "").strip()
     if explicito and Path(explicito).is_file():
         return explicito
-
     achado = shutil.which("node")
     if achado:
         return achado
-
     raiz = Path(os.environ.get("APPDATA", "")) / "fnm" / "node-versions"
     if raiz.is_dir():
         pastas = sorted(
@@ -71,18 +66,15 @@ def achar_node() -> str:
                 candidato = pasta / "installation" / nome
                 if candidato.is_file():
                     return str(candidato)
-
     raise WorkerIndisponivel(
         "Node.js nao encontrado. Instale com: winget install OpenJS.NodeJS.LTS"
     )
 
 
 def _pid_vivo(pid: int) -> bool:
-    """True se o processo existe (nao diz se esta saudavel)."""
     if pid <= 0:
         return False
     if os.name == "nt":
-        # PROCESS_QUERY_LIMITED_INFORMATION basta e nao exige direitos altos.
         kernel32 = ctypes.windll.kernel32
         alca = kernel32.OpenProcess(0x1000, False, int(pid))
         if not alca:
@@ -97,7 +89,6 @@ def _pid_vivo(pid: int) -> bool:
 
 
 def status(segundos: int = 45) -> dict:
-    """Batimento + PID do worker e se o processo ainda existe."""
     dados = armazenamento.worker_status(segundos)
     pid = armazenamento.worker_pid()
     try:
@@ -115,7 +106,6 @@ def status(segundos: int = 45) -> dict:
 
 
 def ligar(modo: str = "manual") -> dict:
-    """Sobe o worker em segundo plano (uma unica vez)."""
     if modo not in MODOS:
         raise WorkerIndisponivel("modo invalido: use 'manual', 'enviar' ou 'parear'")
     if not SCRIPT.is_file():
@@ -146,7 +136,6 @@ def ligar(modo: str = "manual") -> dict:
             | subprocess.CREATE_NO_WINDOW
         )
 
-    # O worker escreve o log dele; aqui so guardamos o console (stderr incluso).
     with open(SAIDA, "a", encoding="utf-8", errors="replace") as saida:
         processo = subprocess.Popen(
             [node, str(SCRIPT), *MODOS[modo]],
@@ -169,11 +158,6 @@ def ligar(modo: str = "manual") -> dict:
 
 
 def _pids_do_worker() -> list[int]:
-    """Workers antigos que ainda nao informaram o PID no pulso.
-
-    So roda no Windows e so olha processos node cujo comando chama worker.cjs:
-    nao toca em nenhum outro programa.
-    """
     if os.name != "nt":
         return []
     script = (
@@ -211,7 +195,7 @@ def _matar(pid: int) -> None:
 
 
 def desligar(forcar: bool = False) -> dict:
-    """Pede o encerramento; `forcar` mata o processo na hora."""
+    """Pede o encerramento; se o worker nao sair, encerra de verdade."""
     pid = armazenamento.worker_pid()
 
     if forcar:
@@ -224,21 +208,44 @@ def desligar(forcar: bool = False) -> dict:
         return {"desligado": True, "pid": pid, "motivo": "encerrado a forca"}
 
     momento = armazenamento.pedir_parada_worker()
+
+    for _ in range(12):
+        time.sleep(1)
+        if not pid or not _pid_vivo(pid):
+            armazenamento.limpar_worker()
+            armazenamento.limpar_pedido_parada()
+            return {
+                "desligado": True,
+                "pid": pid,
+                "motivo": "encerrado pelo pedido do painel",
+            }
+
+    alvos: list[int] = []
+    if pid and _pid_vivo(pid):
+        alvos.append(pid)
+    for extra in _pids_do_worker():
+        if extra not in alvos and _pid_vivo(extra):
+            alvos.append(extra)
+
+    for alvo in alvos:
+        _matar(alvo)
+
+    time.sleep(2)
+    armazenamento.limpar_worker()
+    armazenamento.limpar_pedido_parada()
     return {
-        "pedido": True,
-        "pedido_em": momento,
+        "desligado": True,
         "pid": pid,
-        "pid_vivo": _pid_vivo(pid),
+        "motivo": "encerrado a forca apos nao responder ao pedido",
+        "processos_encerrados": alvos,
     }
 
 
 def desconectar(limite: int = 150) -> dict:
-    """Desvincula o numero atual: para o worker e roda `--desconectar`."""
     if not SCRIPT.is_file():
         raise WorkerIndisponivel(f"worker nao encontrado em {SCRIPT}")
     node = achar_node()
 
-    # 1) tira o worker da frente (se houver) para liberar o perfil do Chrome.
     atual = status()
     if atual["pid"] and (atual["online"] or atual["pid_vivo"]):
         desligar()
@@ -250,14 +257,12 @@ def desconectar(limite: int = 150) -> dict:
             desligar(forcar=True)
             time.sleep(2)
 
-    # Worker aberto por fora do painel (sem PID registrado) tambem precisa sair.
     restantes = [p for p in _pids_do_worker() if _pid_vivo(p)]
     for extra in restantes:
         _matar(extra)
     if restantes:
         time.sleep(3)
 
-    # 2) logout de verdade: o aparelho sai da lista de dispositivos do celular.
     try:
         resultado = subprocess.run(
             [node, str(SCRIPT), "--desconectar"],
